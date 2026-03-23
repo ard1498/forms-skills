@@ -11,6 +11,11 @@
       "name": "aem-edge-delivery-services",
       "source": "./skills/aem/edge-delivery-services",
       "description": "Skills for AEM Edge Delivery Services development"
+    },
+    {
+      "name": "aem-project-management",
+      "source": "./skills/aem/project-management",
+      "description": "Project lifecycle management for AEM Edge Delivery Services"
     }
   ]
 }
