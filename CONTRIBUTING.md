@@ -31,6 +31,17 @@ For other contributors, a maintainer of the project has to approve the pull requ
 
 To contribute a new skill, follow the format described in the [Agent Skills specification](https://agentskills.io). When your skill is ready, open a pull request and ping [#agentskills](https://adobe.enterprise.slack.com/archives/C0APTKDNPEY) on Slack to get a review.
 
+### Skill Architecture
+
+For skill trees with 5+ skills — especially those with routing, orchestration, or phased workflows — follow the architectural patterns in the [Skill Architecture Guide](docs/skill-architecture/README.md). It provides templates for:
+
+- **[Skill Router](docs/skill-architecture/skill-router-template.md)** — SKILL.md files that dispatch to sub-skills
+- **[Directory Structure](docs/skill-architecture/directory-structure.md)** — standard layout for flat, grouped, and deep skill trees
+- **[Routing Table](docs/skill-architecture/routing-table-template.md)** — offloaded routing logic for complex routers
+- **[Guidelines](docs/skill-architecture/guidelines-template.md)** — cross-cutting constraints shared across multiple skills
+
+These patterns extend the agentskills.io spec with conventions for keeping routers lean (< 100 lines), offloading heavy content to `assets/`, and organizing skills into registries and domains.
+
 # How to Contribute
 
 1. Fork the repository
