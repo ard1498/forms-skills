@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -e
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+exec cat "$PLUGIN_ROOT/scripts/rule_coder/grammar/annotated_subset_grammar.json"

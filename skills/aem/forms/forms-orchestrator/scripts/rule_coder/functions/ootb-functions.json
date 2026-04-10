@@ -1,0 +1,814 @@
+{
+  "searchKey": "displayName",
+  "displayProps": [
+    "displayName",
+    "description"
+  ],
+  "functions": [
+    {
+      "id": "abs",
+      "displayName": "Absolute Value Of",
+      "args": [
+        {
+          "type": "NUMBER",
+          "name": "value",
+          "description": "value",
+          "isMandatory": true
+        }
+      ],
+      "type": "NUMBER",
+      "description": "Returns the absolute value of the provided argument $value.",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "avg",
+      "displayName": "Average Of",
+      "args": [
+        {
+          "type": "NUMBER[]",
+          "name": "elements",
+          "description": "elements",
+          "isMandatory": true
+        }
+      ],
+      "type": "NUMBER",
+      "description": "Returns the average of the elements in the provided array. An empty array will produce a return value of null.",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "ceil",
+      "displayName": "Ceil",
+      "args": [
+        {
+          "type": "NUMBER",
+          "name": "value",
+          "description": "value",
+          "isMandatory": true
+        }
+      ],
+      "type": "NUMBER",
+      "description": "Returns the next highest integer value by rounding up if necessary.",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "contains",
+      "displayName": "Contains",
+      "args": [
+        {
+          "type": "STRING[]|NUMBER[]|ARRAY|STRING",
+          "name": "subject",
+          "description": "subject",
+          "isMandatory": true
+        },
+        {
+          "type": "STRING|BOOLEAN|NUMBER|DATE",
+          "name": "search",
+          "description": "search",
+          "isMandatory": true
+        }
+      ],
+      "type": "BOOLEAN",
+      "description": "Returns true if the given $subject contains the provided $search string. If $subject is an array, this function returns true if one of the elements in the array is equal to the provided $search value. If the provided $subject is a string, this function returns true if the string contains the provided  $search argument.",
+      "impl": "$0($1,$2)"
+    },
+    {
+      "id": "endsWith",
+      "displayName": "Ends With",
+      "args": [
+        {
+          "type": "STRING",
+          "name": "subject",
+          "description": "subject",
+          "isMandatory": true
+        },
+        {
+          "type": "STRING",
+          "name": "prefix",
+          "description": "prefix",
+          "isMandatory": true
+        }
+      ],
+      "type": "BOOLEAN",
+      "description": "Returns true if the $subject ends with the $prefix, otherwise this function returns false.",
+      "impl": "$0($1,$2)"
+    },
+    {
+      "id": "floor",
+      "displayName": "Floor",
+      "args": [
+        {
+          "type": "NUMBER",
+          "name": "value",
+          "description": "value",
+          "isMandatory": true
+        }
+      ],
+      "type": "NUMBER",
+      "description": "Returns the next lowest integer value by rounding down if necessary.",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "length",
+      "displayName": "Length",
+      "args": [
+        {
+          "type": "STRING|NUMBER|BOOLEAN|DATE|STRING[]|NUMBER[]|DATE[]|BOOLEAN[]|FILE[]|ARRAY|OBJECT|PANEL",
+          "name": "subject",
+          "description": "subject",
+          "isMandatory": true
+        }
+      ],
+      "type": "NUMBER",
+      "description": "Returns the length of the given argument using the following types rules: string: returns the number of code points in the string array: returns the number of elements in the array object: returns the number of key-value pairs in the object: returns the number instances in panel",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "max",
+      "displayName": "Maximum",
+      "args": [
+        {
+          "type": "NUMBER[]|STRING[]",
+          "name": "collection",
+          "description": "collection",
+          "isMandatory": true
+        }
+      ],
+      "type": "NUMBER",
+      "description": "Returns the highest found number in the provided array argument. An empty array will produce a return value of null.",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "startsWith",
+      "displayName": "Starts With",
+      "args": [
+        {
+          "type": "STRING",
+          "name": "subject",
+          "description": "subject",
+          "isMandatory": true
+        },
+        {
+          "type": "STRING",
+          "name": "prefix",
+          "description": "prefix",
+          "isMandatory": true
+        }
+      ],
+      "type": "BOOLEAN",
+      "description": "Returns true if the $subject starts with the $prefix, otherwise this function returns false.",
+      "impl": "$0($1,$2)"
+    },
+    {
+      "id": "defaultErrorHandler",
+      "displayName": "Default Invoke Service Error Handler",
+      "args": [
+        {
+          "type": "OBJECT",
+          "name": "response",
+          "description": "response",
+          "isMandatory": true
+        },
+        {
+          "type": "OBJECT",
+          "name": "header",
+          "description": "header",
+          "isMandatory": true
+        }
+      ],
+      "type": "ANY",
+      "isErrorHandler": true,
+      "description": "Default Invoke Service Error Handler",
+      "impl": "$0($1,$2)"
+    },
+    {
+      "id": "sum",
+      "displayName": "Sum",
+      "args": [
+        {
+          "type": "NUMBER[]",
+          "name": "collection",
+          "description": "collection",
+          "isMandatory": true
+        }
+      ],
+      "type": "NUMBER",
+      "description": "Returns the sum of the provided array argument. An empty array will produce a return value of 0.",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "min",
+      "displayName": "Minimum",
+      "args": [
+        {
+          "type": "NUMBER[]|STRING[]",
+          "name": "collection",
+          "description": "collection",
+          "isMandatory": true
+        }
+      ],
+      "type": "NUMBER",
+      "description": "Returns the lowest found number in the provided $collection argument.",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "type",
+      "displayName": "Type",
+      "args": [
+        {
+          "type": "STRING|NUMBER|BOOLEAN|DATE|STRING[]|NUMBER[]|ARRAY|OBJECT",
+          "name": "subject",
+          "description": "subject",
+          "isMandatory": true
+        }
+      ],
+      "type": "STRING",
+      "description": "Returns the JavaScript type of the given $subject argument as a string value. The return value MUST be one of the following: number string boolean array object null",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "keys",
+      "displayName": "Keys",
+      "args": [
+        {
+          "type": "OBJECT",
+          "name": "obj",
+          "description": "obj",
+          "isMandatory": true
+        }
+      ],
+      "type": "STRING[]",
+      "description": "Returns an array containing the keys of the provided object. If the passed object is null, the value returned is an empty array",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "values",
+      "displayName": "Values",
+      "args": [
+        {
+          "type": "OBJECT",
+          "name": "obj",
+          "description": "obj",
+          "isMandatory": true
+        }
+      ],
+      "type": "STRING[]|NUMBER[]|ARRAY",
+      "description": "Returns the values of the provided object. Note that because JSON hashes are inheritently unordered, the values associated with the provided object obj are inheritently unordered.",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "sort",
+      "displayName": "Sort",
+      "args": [
+        {
+          "type": "NUMBER[]|STRING[]",
+          "name": "list",
+          "description": "list",
+          "isMandatory": true
+        }
+      ],
+      "type": "NUMBER[]|STRING[]",
+      "description": "This function accepts an array $list argument and returns the sorted elements of the $list as an array. The array must be a list of strings or numbers. Sorting strings is based on code points. Locale is not taken into account.",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "join",
+      "displayName": "Join",
+      "args": [
+        {
+          "type": "STRING",
+          "name": "glue",
+          "description": "glue",
+          "isMandatory": true
+        },
+        {
+          "type": "STRING[]",
+          "name": "stringsarray",
+          "description": "stringsarray",
+          "isMandatory": true
+        }
+      ],
+      "type": "STRING",
+      "description": "Returns all of the elements from the provided $stringsarray array joined together using the $glue argument as a separator between each.",
+      "impl": "$0($1,$2)"
+    },
+    {
+      "id": "reverse",
+      "displayName": "Reverse",
+      "args": [
+        {
+          "type": "STRING|STRING[]|NUMBER[]|ARRAY",
+          "name": "argument",
+          "description": "argument",
+          "isMandatory": true
+        }
+      ],
+      "type": "STRING|STRING[]|NUMBER[]|ARRAY",
+      "description": "Reverses the order of the $argument.",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "toArray",
+      "displayName": "Convert To Array",
+      "args": [
+        {
+          "type": "STRING|NUMBER|BOOLEAN|DATE|OBJECT",
+          "name": "arg",
+          "description": "arg",
+          "isMandatory": true
+        }
+      ],
+      "type": "STRING[]|NUMBER[]|ARRAY|DATE[]|BOOLEAN[]",
+      "description": "Converts the passed arg to an array array - Returns the passed in value. number/string/object/boolean - Returns a one element array containing the passed in argument.",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "_toString",
+      "displayName": "Convert To String",
+      "args": [
+        {
+          "type": "STRING|NUMBER|BOOLEAN|DATE|STRING[]|NUMBER[]|ARRAY|OBJECT",
+          "name": "arg",
+          "description": "arg",
+          "isMandatory": true
+        }
+      ],
+      "type": "STRING",
+      "description": "Converts the passed arg to a string string - Returns the passed in value. number/array/object/boolean - The JSON encoded value of the object.",
+      "impl": "toString($1)"
+    },
+    {
+      "id": "toNumber",
+      "displayName": "Convert To Number",
+      "args": [
+        {
+          "type": "STRING|NUMBER|BOOLEAN|DATE|STRING[]|NUMBER[]|ARRAY|OBJECT",
+          "name": "arg",
+          "description": "arg",
+          "isMandatory": true
+        }
+      ],
+      "type": "NUMBER",
+      "description": "Converts the passed arg to a number string - Returns the parsed number. number - Returns the passed in value. array - null object - null boolean - null null - null",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "today",
+      "type": "DATE",
+      "displayName": "Get Current Date",
+      "args": [],
+      "impl": "$0()",
+      "description": "Returns current date"
+    },
+    {
+      "id": "lower",
+      "displayName": "To Lower Case",
+      "args": [
+        {
+          "type": "STRING",
+          "name": "input",
+          "description": "input string",
+          "isMandatory": true
+        }
+      ],
+      "type": "STRING",
+      "description": "Converts all the alphabetic characters in a string to lowercase. If the value is not a string it will be converted into string using the default toString method",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "upper",
+      "displayName": "To Upper Case",
+      "args": [
+        {
+          "type": "STRING",
+          "name": "input",
+          "description": "input string",
+          "isMandatory": true
+        }
+      ],
+      "type": "STRING",
+      "description": "Converts all the alphabetic characters in a string to uppercase. If the value is not a string it will be converted into string using the default toString method",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "exp",
+      "displayName": "Exponent of",
+      "args": [
+        {
+          "type": "NUMBER",
+          "name": "input",
+          "description": "number",
+          "isMandatory": true
+        }
+      ],
+      "type": "NUMBER",
+      "description": "Returns e (the base of natural logarithms) raised to a power x",
+      "impl": "$0()"
+    },
+    {
+      "id": "power",
+      "displayName": "Power of",
+      "args": [
+        {
+          "type": "NUMBER",
+          "name": "a",
+          "description": "a",
+          "isMandatory": true
+        },
+        {
+          "type": "NUMBER",
+          "name": "x",
+          "description": "x",
+          "isMandatory": true
+        }
+      ],
+      "type": "NUMBER",
+      "description": "Computes `a` raised to a power `x`",
+      "impl": "$0($1,$2)"
+    },
+    {
+      "id": "mid",
+      "displayName": "Substring Of",
+      "args": [
+        {
+          "type": "STRING|ARRAY",
+          "name": "subject",
+          "description": "subject",
+          "isMandatory": true
+        },
+        {
+          "type": "NUMBER",
+          "name": "startPos",
+          "description": "startPos",
+          "isMandatory": true
+        },
+        {
+          "type": "NUMBER",
+          "name": "length",
+          "description": "length",
+          "isMandatory": true
+        }
+      ],
+      "type": "STRING|ARRAY|STRING[]|NUMBER[]|FILE[]|DATE[]|BOOLEAN[]",
+      "description": "Returns extracted text, given an original text, starting position, and length. or in case of array, extracts a subset of the array from start till the length number of elements. Returns null",
+      "impl": "$0($1,$2,$3)"
+    },
+    {
+      "id": "mod",
+      "displayName": "Modulo of",
+      "args": [
+        {
+          "type": "NUMBER",
+          "name": "dividend",
+          "description": "dividend",
+          "isMandatory": true
+        },
+        {
+          "type": "NUMBER",
+          "name": "divisor",
+          "description": "divisor",
+          "isMandatory": true
+        }
+      ],
+      "type": "NUMBER",
+      "description": "Return the remainder when one number is divided by another number.",
+      "impl": "$0($1,$2)"
+    },
+    {
+      "id": "proper",
+      "displayName": "To Uppercase First Letter",
+      "args": [
+        {
+          "type": "STRING",
+          "name": "text",
+          "description": "text",
+          "isMandatory": true
+        }
+      ],
+      "type": "STRING",
+      "description": "Return the input string with the first letter of each word converted to an uppercase letter and the rest of the letters in the word converted to lowercase.",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "rept",
+      "displayName": "Repeat String",
+      "args": [
+        {
+          "type": "STRING",
+          "name": "text",
+          "description": "text to repeat",
+          "isMandatory": true
+        },
+        {
+          "type": "NUMBER",
+          "name": "count",
+          "description": "number of times to repeat the text",
+          "isMandatory": true
+        }
+      ],
+      "type": "STRING",
+      "description": "Return text repeated Count times. rept('x', 5) returns 'xxxxx'",
+      "impl": "$0($1,$2)"
+    },
+    {
+      "id": "replace",
+      "displayName": "Replace",
+      "args": [
+        {
+          "type": "STRING",
+          "name": "text",
+          "description": "original text",
+          "isMandatory": true
+        },
+        {
+          "type": "NUMBER",
+          "name": "start",
+          "description": "index in the original text from where to begin the replacement.",
+          "isMandatory": true
+        },
+        {
+          "type": "NUMBER",
+          "name": "length",
+          "description": "number of characters to be replaced",
+          "isMandatory": true
+        },
+        {
+          "type": "STRING",
+          "name": "replacement",
+          "description": "string to replace at the start index",
+          "isMandatory": true
+        }
+      ],
+      "type": "STRING",
+      "description": "Returns text where an old text is substituted at a given start position and length, with a new text.",
+      "impl": "$0($1,$2,$3,$4)"
+    },
+    {
+      "id": "round",
+      "displayName": "Round",
+      "args": [
+        {
+          "type": "NUMBER",
+          "name": "num",
+          "description": "number to round off",
+          "isMandatory": true
+        },
+        {
+          "type": "NUMBER",
+          "name": "precision",
+          "description": "number is rounded to the specified precision",
+          "isMandatory": true
+        }
+      ],
+      "type": "NUMBER",
+      "description": "Round a number to a specified precision. If precision is not specified, round to the nearest integer",
+      "impl": "$0($1,$2)"
+    },
+    {
+      "id": "sqrt",
+      "displayName": "Square Root Of",
+      "args": [
+        {
+          "type": "NUMBER",
+          "name": "num",
+          "description": "number whose square root has to be calculated",
+          "isMandatory": true
+        }
+      ],
+      "type": "NUMBER",
+      "description": "Return the square root of a number",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "trim",
+      "displayName": "Trim",
+      "args": [
+        {
+          "type": "STRING",
+          "name": "text",
+          "description": "string to trim",
+          "isMandatory": true
+        }
+      ],
+      "type": "STRING",
+      "description": "Remove leading and trailing spaces, and replace all internal multiple spaces with a single space.",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "trunc",
+      "displayName": "Truncate a number",
+      "args": [
+        {
+          "type": "NUMBER",
+          "name": "numA",
+          "description": "number to truncate",
+          "isMandatory": true
+        },
+        {
+          "type": "NUMBER",
+          "name": "numB",
+          "description": "number of digits to truncate the number to",
+          "isMandatory": true
+        }
+      ],
+      "type": "NUMBER",
+      "description": "Truncate a number to a specified number of digits.",
+      "impl": "$0($1,$2)"
+    },
+    {
+      "id": "split",
+      "displayName": "Split a string into array",
+      "args": [
+        {
+          "type": "STRING",
+          "name": "string",
+          "description": "string to split",
+          "isMandatory": true
+        },
+        {
+          "type": "STRING",
+          "name": "separator",
+          "description": "separator where the split should occur",
+          "isMandatory": true
+        }
+      ],
+      "type": "STRING[]",
+      "description": "Split a string into an array, given a separator",
+      "impl": "$0($1,$2)"
+    },
+    {
+      "id": "unique",
+      "displayName": "Unique Values Of",
+      "args": [
+        {
+          "type": "ARRAY",
+          "name": "input",
+          "description": "input array",
+          "isMandatory": true
+        }
+      ],
+      "type": "ARRAY|STRING[]|NUMBER[]|DATE[]|BOOLEAN[]",
+      "description": "Takes an array and returns unique elements within it",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "_validateForm",
+      "type": "BOOLEAN",
+      "displayName": "Validate Form",
+      "args": [],
+      "impl": "validate($form).length==0",
+      "description": "Validate Form"
+    },
+    {
+      "id": "defaultSubmitSuccessHandler",
+      "displayName": "Default Submit Form Success Handler",
+      "args": [],
+      "type": "ANY",
+      "description": "Default Submit Form Success Handler",
+      "impl": "$0()"
+    },
+    {
+      "id": "defaultSubmitErrorHandler",
+      "displayName": "Default Submit Form Error Handler",
+      "args": [
+        {
+          "type": "STRING",
+          "name": "defaultSubmitErrorMessage",
+          "description": "Localized error message",
+          "isMandatory": true
+        }
+      ],
+      "type": "ANY",
+      "description": "Default Submit Form Error Handler",
+      "impl": "$0($1)"
+    },
+    {
+      "id": "getEventPayload",
+      "type": "STRING|NUMBER|BOOLEAN|DATE|STRING[]|NUMBER[]|DATE[]|BOOLEAN[]|FILE[]|ARRAY|OBJECT",
+      "displayName": "Get Event Payload",
+      "args": [
+        {
+          "type": "STRING",
+          "name": "input",
+          "description": "input param",
+          "isMandatory": false
+        }
+      ],
+      "impl": "$event.payload.$1",
+      "description": "Get Event Payload"
+    },
+    {
+      "id": "setVariable",
+      "displayName": "Set Variable Value",
+      "args": [
+        {
+          "type": "STRING",
+          "name": "variableName",
+          "description": "Name of the variable (supports dot notation e.g. 'address.city')",
+          "isMandatory": true
+        },
+        {
+          "type": "STRING|NUMBER|BOOLEAN|DATE|AFCOMPONENT|OBJECT|ARRAY",
+          "name": "variableValue",
+          "description": "Value to set for the variable",
+          "isMandatory": true
+        },
+        {
+          "type": "AFCOMPONENT|FORM",
+          "name": "normalFieldOrPanel",
+          "description": "Field or panel component to set the variable on (defaults to actual Form)",
+          "isMandatory": false
+        }
+      ],
+      "type": "VOID",
+      "description": "Set variable value on a field or form",
+      "impl": "$0($1,$2,$3)"
+    },
+    {
+      "id": "getVariable",
+      "displayName": "Get Variable Value",
+      "args": [
+        {
+          "type": "STRING",
+          "name": "variableName",
+          "description": "Name of the variable (supports dot notation e.g. 'address.city')",
+          "isMandatory": true
+        },
+        {
+          "type": "AFCOMPONENT|FORM",
+          "name": "normalFieldOrPanel",
+          "description": "Field or panel component to get the value from (defaults to actual Form)",
+          "isMandatory": false
+        }
+      ],
+      "type": "STRING|NUMBER|BOOLEAN|DATE|OBJECT|ARRAY|AFCOMPONENT",
+      "description": "Get field or form variable value",
+      "impl": "$0($1,$2)"
+    },
+    {
+      "id": "exportFormData",
+      "displayName": "Export Form Data",
+      "args": [
+        {
+          "type": "BOOLEAN",
+          "name": "stringify",
+          "description": "Convert the form data to a JSON string, defaults to true",
+          "isMandatory": false
+        },
+        {
+          "type": "STRING",
+          "name": "key",
+          "description": "The key to get the value for (supports dot notation e.g. 'address.city'), defaults to all form data",
+          "isMandatory": false
+        }
+      ],
+      "type": "STRING|OBJECT",
+      "description": "Export form data as a JSON string",
+      "impl": "$0($1,$2)"
+    },
+    {
+      "id": "importData",
+      "displayName": "Import Form Data",
+      "args": [
+        {
+          "type": "OBJECT",
+          "name": "data",
+          "description": "The form data to set",
+          "isMandatory": true
+        }
+      ],
+      "type": "VOID",
+      "description": "Import Form Data",
+      "impl": "importData($1)"
+    },
+    {
+      "id": "validate",
+      "type": "BOOLEAN",
+      "displayName": "Validate",
+      "args": [
+        {
+          "type": "AFCOMPONENT|FORM",
+          "name": "field",
+          "description": "Field, panel or form component to validate",
+          "isMandatory": true
+        }
+      ],
+      "impl": "$0($1).length==0",
+      "description": "Validate"
+    },
+    {
+      "id": "downloadDoR",
+      "type": "ANY",
+      "displayName": "Download DoR",
+      "args": [
+        {
+          "type": "STRING",
+          "name": "fileName",
+          "description": "The name of the file to be downloaded. Defaults to 'Downloaded_DoR.pdf' if not specified.",
+          "isMandatory": false
+        }
+      ],
+      "impl": "$0($1)",
+      "description": "Download DoR"
+    }
+  ]
+}

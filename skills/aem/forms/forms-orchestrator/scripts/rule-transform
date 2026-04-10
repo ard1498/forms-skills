@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -e
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+source "$PLUGIN_ROOT/scripts/_resolve-workspace"
+cd "$FORMS_WORKSPACE"
+exec node "$PLUGIN_ROOT/scripts/rule_coder/bridge/cli/transform-form.js" "$@"

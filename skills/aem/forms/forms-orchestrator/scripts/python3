@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# ─────────────────────────────────────────────────────────────────────────────
+# AEM Forms Skills — Python wrapper with lazy venv bootstrap
+#
+# Thin wrapper that ensures the plugin's virtual environment exists before
+# running any Python command. On first invocation it silently runs setup.sh
+# to create .venv and install all dependencies. Subsequent calls go straight
+# through with no overhead.
+#
+# Also sets PYTHONPATH for all Python package directories so every script
+# and module is importable without callers needing to manage paths.
+#
+# PLUGIN_ROOT  = forms-orchestrator/     (parent of scripts/)
+# PROJECT_ROOT = forms/                  (parent of forms-orchestrator/)
+#                where .venv lives (outside the plugin package)
+# ─────────────────────────────────────────────────────────────────────────────
+set -e
+
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+PROJECT_ROOT="$(cd "$PLUGIN_ROOT/.." && pwd)"
+VENV_PYTHON="$PROJECT_ROOT/.venv/bin/python3"
+
+# Bootstrap the venv if it doesn't exist yet
+if [ ! -x "$VENV_PYTHON" ]; then
+  echo "⏳ First run — setting up AEM Forms Skills environment…" >&2
+  "$PLUGIN_ROOT/scripts/setup.sh" >&2
+  echo "" >&2
+
+  # Verify setup succeeded
+  if [ ! -x "$VENV_PYTHON" ]; then
+    echo "❌ Setup failed — .venv/bin/python3 not found after running setup.sh" >&2
+    exit 1
+  fi
+fi
+
+# ── Set PYTHONPATH for all plugin Python packages ────────────────────────────
+# Shared scripts (rule_coder, api_manager)
+# Skill-embedded scripts (form_sync, eds_code_sync, git_sandbox, cct, eds_form_validator, scaffold_form, api_skill)
+DR="$PLUGIN_ROOT/references/domain-registry/references"
+PLUGIN_PYTHONPATH="$PLUGIN_ROOT/scripts"
+PLUGIN_PYTHONPATH="$PLUGIN_PYTHONPATH:$DR/infra/references/sync-forms/scripts"
+PLUGIN_PYTHONPATH="$PLUGIN_PYTHONPATH:$DR/infra/references/sync-eds-code/scripts"
+PLUGIN_PYTHONPATH="$PLUGIN_PYTHONPATH:$DR/infra/references/git-sandbox/scripts"
+PLUGIN_PYTHONPATH="$PLUGIN_PYTHONPATH:$DR/build/references/create-component/scripts"
+PLUGIN_PYTHONPATH="$PLUGIN_PYTHONPATH:$DR/build/references/create-form/scripts"
+PLUGIN_PYTHONPATH="$PLUGIN_PYTHONPATH:$DR/build/references/scaffold-form/scripts"
+PLUGIN_PYTHONPATH="$PLUGIN_PYTHONPATH:$DR/integration/references/manage-apis/scripts"
+export PYTHONPATH="$PLUGIN_PYTHONPATH${PYTHONPATH:+:$PYTHONPATH}"
+
+exec "$VENV_PYTHON" "$@"

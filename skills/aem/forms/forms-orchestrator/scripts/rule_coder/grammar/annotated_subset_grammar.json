@@ -1,0 +1,1114 @@
+{
+  "_INSTRUCTIONS": {
+    "purpose": "SIMPLIFIED SUBSET of AEM Forms grammar for AI-powered rule generation. This is a SUBSET of annotated_grammar.json - all structures are AEM-compatible.",
+    "pattern": "When [COMPONENT] [TRIGGER_EVENT] [optional: condition] Then [actions] [optional: Else [actions]]",
+    "node_types": {
+      "SEQUENCE": "Contains items in exact order. Must include all items specified in the rule.",
+      "CHOICE": "Select exactly ONE option based on natural language keywords.",
+      "ARRAY": "Contains one or more items of the same type (e.g., multiple actions).",
+      "TERMINAL": "Leaf node containing actual values (form objects, literals, functions).",
+      "LITERAL_TOKEN": "Words like 'When', 'Then', 'Else', 'to' that appear in rules as structure. Include as nodes with nodeName set to the literal word and value: null."
+    },
+    "critical_rules": {
+      "VARIABLE_transparency": "When a node has rule: 'VARIABLE', do NOT create a VARIABLE node. Instead, put the actual value directly in the parent node.",
+      "CONDITION_property": "All CONDITION nodes MUST include property 'nested': false",
+      "trigger_vs_condition": "Trigger event (click, change) is separate from conditions (field equals value). Never combine them with AND/OR.",
+      "else_optional": "Only include Else block and second BLOCK_STATEMENTS when else actions are explicitly mentioned in natural language.",
+      "no_arithmetic_expressions": "For calculations like a + b * c, use FUNCTION_CALL with a custom function instead of BINARY_EXPRESSION.",
+      "function_for_complexity": "Any complex logic (string concat, API calls, data transformation) should be done via FUNCTION_CALL with custom functions."
+    },
+    "supported_actions": [
+      "SHOW_STATEMENT", "HIDE_STATEMENT", "SET_VALUE_STATEMENT", "CLEAR_VALUE_STATEMENT",
+      "ENABLE_STATEMENT", "DISABLE_STATEMENT", "SET_FOCUS", "DISPATCH_EVENT",
+      "FUNCTION_CALL", "SET_PROPERTY", "RESET_FORM", "VALIDATE_FORM",
+      "SUBMIT_FORM", "SAVE_FORM", "NAVIGATE_TO", "ADD_INSTANCE",
+      "REMOVE_INSTANCE", "NAVIGATE_IN_PANEL", "SET_VARIABLE"
+    ],
+    "not_supported": {
+      "actions": ["WSDL_STATEMENT", "ASYNC_FUNCTION_CALL"],
+      "expressions": ["BINARY_EXPRESSION (use FUNCTION_CALL)", "STRING_BINARY_EXPRESSION", "ARITHMETIC_EXPRESSION"],
+      "alternative": "Use FUNCTION_CALL with custom functions for complex logic"
+    }
+  },
+  "_PATTERN_TEMPLATE": {
+    "description": "Standard structure for all trigger event rules",
+    "structure": {
+      "nodeName": "ROOT",
+      "items": [{
+        "nodeName": "STATEMENT",
+        "choice": {
+          "nodeName": "TRIGGER_SCRIPTS",
+          "items": [{
+            "nodeName": "SINGLE_TRIGGER_SCRIPTS",
+            "items": [
+              "COMPONENT (what triggers)",
+              "TRIGGER_EVENT (standard: 'is clicked', 'is changed', 'is initialised' OR custom event name)",
+              "{ nodeName: 'When', value: null } (literal token)",
+              "TRIGGER_EVENT_SCRIPTS (contains condition, then, actions, else, else-actions)"
+            ]
+          }]
+        }
+      }]
+    }
+  },
+  "ROOT": {
+    "rule": "STATEMENT",
+    "description": "The root node of any rule. Always start here. Contains exactly ONE item: a STATEMENT node.",
+    "node_type": "SEQUENCE",
+    "structure": {
+      "nodeName": "ROOT",
+      "items": ["exactly 1 STATEMENT"]
+    }
+  },
+  "STATEMENT": {
+    "rule": "TRIGGER_SCRIPTS",
+    "description": "Top-level statement type. For trigger event rules, always choose TRIGGER_SCRIPTS.",
+    "node_type": "CHOICE",
+    "choice_options": ["TRIGGER_SCRIPTS"],
+    "how_to_choose": "For When-Then-Else rules, always select TRIGGER_SCRIPTS",
+    "structure": {
+      "nodeName": "STATEMENT",
+      "choice": {"nodeName": "TRIGGER_SCRIPTS", "items": []}
+    }
+  },
+  "TRIGGER_SCRIPTS": {
+    "rule": "SINGLE_TRIGGER_SCRIPTS",
+    "choiceName": "On Trigger Event",
+    "description": "Container for a single trigger-based rule. Contains exactly ONE item: SINGLE_TRIGGER_SCRIPTS.",
+    "node_type": "SEQUENCE",
+    "structure": {
+      "nodeName": "TRIGGER_SCRIPTS",
+      "items": ["exactly 1 SINGLE_TRIGGER_SCRIPTS"]
+    }
+  },
+  "SINGLE_TRIGGER_SCRIPTS": {
+    "rule": "COMPONENT TRIGGER_EVENT When TRIGGER_EVENT_SCRIPTS",
+    "description": "SEQUENCE NODE with exactly 4 items in order: 1) COMPONENT (what triggers), 2) TRIGGER_EVENT (event type), 3) 'When' literal token, 4) TRIGGER_EVENT_SCRIPTS (condition + actions).",
+    "node_type": "SEQUENCE",
+    "items_order": [
+      "1. COMPONENT - The form component that triggers the rule",
+      "2. TRIGGER_EVENT - The event type (standard: 'is clicked', 'is changed', 'is initialised' OR custom event)",
+      "3. 'When' literal token - {nodeName: 'When', value: null}",
+      "4. TRIGGER_EVENT_SCRIPTS - Contains condition and actions"
+    ],
+    "structure": {
+      "nodeName": "SINGLE_TRIGGER_SCRIPTS",
+      "items": [
+        "COMPONENT object",
+        "TRIGGER_EVENT object",
+        "{nodeName: 'When', value: null}",
+        "TRIGGER_EVENT_SCRIPTS object"
+      ]
+    }
+  },
+  "COMPONENT": {
+    "rule": "VARIABLE",
+    "choiceName": "Form Object",
+    "description": "TERMINAL NODE: A form component (button, text field, etc.). Use VARIABLE transparency rule - put form object directly here, do NOT create VARIABLE node.",
+    "node_type": "TERMINAL",
+    "value_structure": {
+      "nodeName": "COMPONENT",
+      "value": {
+        "id": "$form.componentID",
+        "displayName": "Component Display Name",
+        "type": "AFCOMPONENT|FIELD|TEXT FIELD|STRING",
+        "isDuplicate": false,
+        "displayPath": "FORM/Parent/Component/",
+        "name": "componentName",
+        "parent": "$form.parentID",
+        "metadata": {}
+      }
+    },
+    "type_reference": "Use full type from treeJson: FORM (for form), AFCOMPONENT|PANEL (for panels), AFCOMPONENT|FIELD|TEXT FIELD|STRING (for text inputs), etc."
+  },
+  "TRIGGER_EVENT": {
+    "choiceName": "String",
+    "description": "TERMINAL NODE: The event that triggers the rule. Standard events: 'is clicked', 'is changed', 'is initialised'. Custom events: use exact name provided by user.",
+    "node_type": "TERMINAL",
+    "standard_events": {
+      "is clicked": "When component is clicked",
+      "is changed": "When component value changes",
+      "is initialised": "When component initializes/loads"
+    },
+    "custom_events": {
+      "enabled": true,
+      "description": "If event doesn't match standard events, use exact name provided by user",
+      "examples": ["submit", "abc", "myCustomEvent"]
+    },
+    "value_structure": {
+      "nodeName": "TRIGGER_EVENT",
+      "value": "is clicked"
+    }
+  },
+  "TRIGGER_EVENT_SCRIPTS": {
+    "rule": "CONDITION Then BLOCK_STATEMENTS Else BLOCK_STATEMENTS",
+    "choiceName": "When",
+    "description": "SEQUENCE NODE with 5 items: 1) CONDITION (optional), 2) 'Then' literal token, 3) BLOCK_STATEMENTS (actions), 4) 'Else' literal token (only if else actions exist), 5) BLOCK_STATEMENTS for else (only if else actions exist).",
+    "node_type": "SEQUENCE",
+    "items_order": [
+      "1. CONDITION - Optional condition to check (can be empty/always true)",
+      "2. 'Then' literal token - {nodeName: 'Then', value: null}",
+      "3. BLOCK_STATEMENTS - Actions to execute when condition is true",
+      "4. 'Else' literal token - {nodeName: 'Else', value: null} - ONLY if else actions mentioned",
+      "5. BLOCK_STATEMENTS - Actions for else - ONLY if else actions mentioned"
+    ],
+    "structure_with_else": {
+      "nodeName": "TRIGGER_EVENT_SCRIPTS",
+      "items": [
+        "CONDITION object",
+        "{nodeName: 'Then', value: null}",
+        "BLOCK_STATEMENTS object (then actions)",
+        "{nodeName: 'Else', value: null}",
+        "BLOCK_STATEMENTS object (else actions)"
+      ]
+    },
+    "structure_without_else": {
+      "nodeName": "TRIGGER_EVENT_SCRIPTS",
+      "items": [
+        "CONDITION object",
+        "{nodeName: 'Then', value: null}",
+        "BLOCK_STATEMENTS object (then actions)"
+      ]
+    }
+  },
+  "CONDITION": {
+    "rule": "COMPARISON_EXPRESSION | BOOLEAN_BINARY_EXPRESSION",
+    "choiceName": "When",
+    "description": "CHOICE NODE: Select COMPARISON_EXPRESSION for simple single comparisons. Select BOOLEAN_BINARY_EXPRESSION when condition contains AND/OR logic. MUST include 'nested: false' property. For EMPTY/NO condition, use choice: null (NOT {} empty object!).",
+    "node_type": "CHOICE",
+    "how_to_choose": {
+      "COMPARISON_EXPRESSION": "Single comparison: 'field equals 5', 'textinput is empty', 'number > 10'",
+      "BOOLEAN_BINARY_EXPRESSION": "Multiple conditions with AND/OR: 'field equals 5 AND textinput is not empty'",
+      "null": "NO condition (always execute) - use choice: null"
+    },
+    "required_property": "nested: false",
+    "empty_condition": "When there is NO condition (always execute), use choice: null - NOT {} empty object!",
+    "structure_with_condition": {
+      "nodeName": "CONDITION",
+      "nested": false,
+      "choice": {"nodeName": "COMPARISON_EXPRESSION or BOOLEAN_BINARY_EXPRESSION", "items": []}
+    },
+    "structure_empty": {
+      "_note": "Use this when there is NO condition - choice is null, NOT {}",
+      "nodeName": "CONDITION",
+      "nested": false,
+      "choice": null
+    }
+  },
+  "COMPARISON_EXPRESSION": {
+    "rule": "EXPRESSION OPERATOR EXPRESSION",
+    "choiceName": "Condition",
+    "description": "SEQUENCE NODE: Single comparison with 3 items: 1) left EXPRESSION, 2) OPERATOR, 3) right EXPRESSION.",
+    "node_type": "SEQUENCE",
+    "items_order": [
+      "1. EXPRESSION - Left side (usually a form component)",
+      "2. OPERATOR - Comparison operator (equals, greater than, is empty, etc.)",
+      "3. EXPRESSION - Right side (value, literal, or another component) - NOTE: For unary operators like IS_EMPTY, this may be omitted"
+    ],
+    "examples": {
+      "field equals value": ["COMPONENT(numberInput)", "EQUALS_TO", "NUMERIC_LITERAL(10)"],
+      "field is empty": ["COMPONENT(textInput)", "IS_EMPTY", "(no right expression)"],
+      "field greater than value": ["COMPONENT(age)", "GREATER_THAN", "NUMERIC_LITERAL(18)"]
+    },
+    "structure": {
+      "nodeName": "COMPARISON_EXPRESSION",
+      "items": [
+        "EXPRESSION object (left)",
+        "OPERATOR object",
+        "EXPRESSION object (right)"
+      ]
+    }
+  },
+  "BOOLEAN_BINARY_EXPRESSION": {
+    "rule": "CONDITION OPERATOR CONDITION",
+    "description": "SEQUENCE NODE: Combines two conditions with AND/OR. Contains 3 items: 1) left CONDITION, 2) OPERATOR (AND/OR), 3) right CONDITION.",
+    "node_type": "SEQUENCE",
+    "items_order": [
+      "1. CONDITION - Left condition",
+      "2. OPERATOR - AND or OR",
+      "3. CONDITION - Right condition"
+    ],
+    "structure": {
+      "nodeName": "BOOLEAN_BINARY_EXPRESSION",
+      "items": [
+        "CONDITION object (left)",
+        "OPERATOR object (AND/OR)",
+        "CONDITION object (right)"
+      ]
+    }
+  },
+  "EXPRESSION": {
+    "rule": "COMPONENT | STRING_LITERAL | NUMERIC_LITERAL | BOOLEAN_LITERAL | DATE_LITERAL | FUNCTION_CALL | UTM_PARAMETER | QUERY_PARAMETER | BROWSER_DETAILS | URL_DETAILS | GET_VARIABLE",
+    "description": "CHOICE NODE: Select based on value type and source. NOTE: For complex operations (arithmetic, string concat), use FUNCTION_CALL with a custom function.",
+    "node_type": "CHOICE",
+    "how_to_choose": {
+      "COMPONENT": "Form field references (e.g., 'Text Input', 'Button', 'numberInput')",
+      "STRING_LITERAL": "Text values in quotes or mentioned as text (e.g., 'hello', \"test\")",
+      "NUMERIC_LITERAL": "Numbers (e.g., 5, 10.5, -3)",
+      "BOOLEAN_LITERAL": "true or false values",
+      "DATE_LITERAL": "Date values",
+      "FUNCTION_CALL": "Function names or any calculated/complex values (e.g., 'calculateTotal()', 'formatName(first, last)')",
+      "UTM_PARAMETER": "UTM tracking parameters (utm_source, utm_medium, utm_campaign, utm_term, utm_content)",
+      "QUERY_PARAMETER": "URL query parameters (e.g., 'query param xyz')",
+      "BROWSER_DETAILS": "Browser info (userAgent, language, platform)",
+      "URL_DETAILS": "URL components (hostname, pathname)",
+      "GET_VARIABLE": "Retrieve stored variable value"
+    },
+    "structure": {
+      "nodeName": "EXPRESSION",
+      "choice": {"nodeName": "STRING_LITERAL or NUMERIC_LITERAL or other", "value or items": "varies"}
+    }
+  },
+  "OPERATOR": {
+    "rule": "LESS_THAN | GREATER_THAN | EQUALS_TO | NOT_EQUALS_TO | CONTAINS | DOES_NOT_CONTAIN | STARTS_WITH | ENDS_WITH | AND | OR | HAS_SELECTED | IS_NOT_EMPTY | IS_EMPTY | IS_TRUE | IS_FALSE | IS_BEFORE | IS_AFTER | IS_VALID | IS_NOT_VALID",
+    "description": "CHOICE NODE: Select operator based on natural language. NOTE: Arithmetic operators (PLUS, MINUS, MULTIPLY, DIVIDE) are NOT in this subset - use FUNCTION_CALL for calculations.",
+    "node_type": "CHOICE",
+    "common_mappings": {
+      "equals, is equal to, is, same as": "EQUALS_TO",
+      "not equals, is not equal to, !=, different from": "NOT_EQUALS_TO",
+      "greater than, more than, >": "GREATER_THAN",
+      "less than, smaller than, <": "LESS_THAN",
+      "contains, includes": "CONTAINS",
+      "does not contain, excludes": "DOES_NOT_CONTAIN",
+      "starts with, begins with": "STARTS_WITH",
+      "ends with, finishes with": "ENDS_WITH",
+      "and, &&": "AND",
+      "or, ||": "OR",
+      "is empty, is blank, has no value": "IS_EMPTY",
+      "is not empty, has value, is filled": "IS_NOT_EMPTY",
+      "is true, is checked": "IS_TRUE",
+      "is false, is unchecked": "IS_FALSE",
+      "is before, before": "IS_BEFORE",
+      "is after, after": "IS_AFTER",
+      "has selected, selected": "HAS_SELECTED",
+      "is valid, valid": "IS_VALID",
+      "is not valid, invalid": "IS_NOT_VALID"
+    },
+    "structure": {
+      "nodeName": "OPERATOR",
+      "choice": {
+        "nodeName": "EQUALS_TO",
+        "value": null
+      }
+    },
+    "structure_examples": {
+      "equals": {"nodeName": "OPERATOR", "choice": {"nodeName": "EQUALS_TO", "value": null}},
+      "not_equals": {"nodeName": "OPERATOR", "choice": {"nodeName": "NOT_EQUALS_TO", "value": null}},
+      "and": {"nodeName": "OPERATOR", "choice": {"nodeName": "AND", "value": null}},
+      "greater_than": {"nodeName": "OPERATOR", "choice": {"nodeName": "GREATER_THAN", "value": null}}
+    }
+  },
+  "EQUALS_TO": {
+    "choiceName": "is equal to",
+    "description": "Equality comparison. Use when NL says 'equals', 'is equal to', 'is', 'same as'.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "NOT_EQUALS_TO": {
+    "choiceName": "is not equal to",
+    "description": "Not equal comparison. Use when NL says 'not equals', 'is not equal to', '!=', 'different from'.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "GREATER_THAN": {
+    "choiceName": "is greater than",
+    "description": "Greater than comparison. Use when NL says 'greater than', 'more than', '>'.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "LESS_THAN": {
+    "choiceName": "is less than",
+    "description": "Less than comparison. Use when NL says 'less than', 'smaller than', '<'.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "CONTAINS": {
+    "choiceName": "contains",
+    "description": "Contains check. Use when NL says 'contains', 'includes'.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "DOES_NOT_CONTAIN": {
+    "choiceName": "does not contain",
+    "description": "Does not contain. Use when NL says 'does not contain', 'excludes'.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "STARTS_WITH": {
+    "choiceName": "starts with",
+    "description": "String starts with. Use when NL says 'starts with', 'begins with'.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "ENDS_WITH": {
+    "choiceName": "ends with",
+    "description": "String ends with. Use when NL says 'ends with', 'finishes with'.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "AND": {
+    "choiceName": "And",
+    "description": "Logical AND. Both conditions must be true. Use when NL says 'and', '&&'.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "OR": {
+    "choiceName": "Or",
+    "description": "Logical OR. At least one condition must be true. Use when NL says 'or', '||'.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "IS_EMPTY": {
+    "choiceName": "is empty",
+    "description": "Checks if field is empty/blank. Unary operator (no right expression needed). Use when NL says 'is empty', 'is blank', 'has no value'.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "IS_NOT_EMPTY": {
+    "choiceName": "is not empty",
+    "description": "Checks if field has value. Unary operator. Use when NL says 'is not empty', 'has value', 'is filled'.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "IS_TRUE": {
+    "choiceName": "is true",
+    "description": "Checks if boolean is true. Unary operator. Use when NL says 'is true', 'is checked'.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "IS_FALSE": {
+    "choiceName": "is false",
+    "description": "Checks if boolean is false. Unary operator. Use when NL says 'is false', 'is unchecked'.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "IS_BEFORE": {
+    "choiceName": "is before",
+    "description": "Date comparison - checks if date is before another. Use when NL says 'is before', 'before'.",
+    "node_type": "TERMINAL",
+    "value": null,
+    "operatorType": [["BOOLEAN", "DATE", "DATE"]]
+  },
+  "IS_AFTER": {
+    "choiceName": "is after",
+    "description": "Date comparison - checks if date is after another. Use when NL says 'is after', 'after'.",
+    "node_type": "TERMINAL",
+    "value": null,
+    "operatorType": [["BOOLEAN", "DATE", "DATE"]]
+  },
+  "HAS_SELECTED": {
+    "choiceName": "has selected",
+    "description": "Checks if multi-select field has a specific value selected. Use when NL says 'has selected', 'selected'.",
+    "node_type": "TERMINAL",
+    "value": null,
+    "operatorType": [["BOOLEAN", "STRING[]", "STRING"], ["BOOLEAN", "NUMBER[]", "NUMBER"]]
+  },
+  "IS_VALID": {
+    "choiceName": "is valid",
+    "description": "Checks if field passes validation. Unary operator. Use when NL says 'is valid', 'valid'.",
+    "node_type": "TERMINAL",
+    "value": null,
+    "operatorType": [["BOOLEAN", "STRING"], ["BOOLEAN", "NUMBER"], ["BOOLEAN", "DATE"]]
+  },
+  "IS_NOT_VALID": {
+    "choiceName": "is not valid",
+    "description": "Checks if field fails validation. Unary operator. Use when NL says 'is not valid', 'invalid'.",
+    "node_type": "TERMINAL",
+    "value": null,
+    "operatorType": [["BOOLEAN", "STRING"], ["BOOLEAN", "NUMBER"], ["BOOLEAN", "DATE"]]
+  },
+  "UTM_PARAMETER": {
+    "rule": null,
+    "choiceName": "UTM Parameter",
+    "description": "TERMINAL NODE: Access UTM tracking parameters from URL. Options: utm_source, utm_medium, utm_campaign, utm_term, utm_content.",
+    "node_type": "TERMINAL",
+    "dataType": "STRING",
+    "options": {
+      "utm_source": "UTM Source",
+      "utm_medium": "UTM Medium",
+      "utm_campaign": "UTM Campaign",
+      "utm_term": "UTM Term",
+      "utm_content": "UTM Content"
+    },
+    "value_structure": {
+      "nodeName": "UTM_PARAMETER",
+      "value": "utm_source"
+    }
+  },
+  "QUERY_PARAMETER": {
+    "rule": null,
+    "choiceName": "Query Parameter",
+    "description": "TERMINAL NODE: Access URL query parameters. Use when NL mentions 'query param', 'URL parameter', or specific param names.",
+    "node_type": "TERMINAL",
+    "dataType": "STRING",
+    "value_structure": {
+      "nodeName": "QUERY_PARAMETER",
+      "value": "paramName"
+    }
+  },
+  "BROWSER_DETAILS": {
+    "rule": null,
+    "choiceName": "Browser Parameter",
+    "description": "TERMINAL NODE: Access browser information. Options: userAgent, language, platform.",
+    "node_type": "TERMINAL",
+    "dataType": "STRING",
+    "options": {
+      "userAgent": "Browser Agent",
+      "language": "Browser Language",
+      "platform": "Browser Platform"
+    },
+    "value_structure": {
+      "nodeName": "BROWSER_DETAILS",
+      "value": "userAgent"
+    }
+  },
+  "URL_DETAILS": {
+    "rule": null,
+    "choiceName": "URL Parameter",
+    "description": "TERMINAL NODE: Access URL components. Options: hostname, pathname.",
+    "node_type": "TERMINAL",
+    "dataType": "STRING",
+    "options": {
+      "hostname": "Host name",
+      "pathname": "Path"
+    },
+    "value_structure": {
+      "nodeName": "URL_DETAILS",
+      "value": "hostname"
+    }
+  },
+  "GET_VARIABLE": {
+    "rule": "key VARIABLE_NAME from AFCOMPONENT",
+    "choiceName": "Get Variable Value",
+    "description": "SEQUENCE NODE: Retrieve a stored variable value. Contains 4 items: 1) 'key' literal, 2) VARIABLE_NAME, 3) 'from' literal, 4) AFCOMPONENT.",
+    "node_type": "SEQUENCE",
+    "dataType": "STRING|NUMBER|BOOLEAN|DATE|OBJECT|ARRAY",
+    "items_order": [
+      "1. 'key' literal token - {nodeName: 'key', value: null}",
+      "2. VARIABLE_NAME - The variable key (string or component value)",
+      "3. 'from' literal token - {nodeName: 'from', value: null}",
+      "4. AFCOMPONENT - The component storing the variable"
+    ],
+    "structure": {
+      "nodeName": "GET_VARIABLE",
+      "items": [
+        "{nodeName: 'key', value: null}",
+        "VARIABLE_NAME object",
+        "{nodeName: 'from', value: null}",
+        "AFCOMPONENT object"
+      ]
+    }
+  },
+  "VARIABLE_NAME": {
+    "rule": "AFCOMPONENT | STRING_LITERAL | FUNCTION_CALL | GET_VARIABLE",
+    "description": "CHOICE NODE: The variable key - can be a string, component value, function result, or another variable.",
+    "node_type": "CHOICE",
+    "dataType": "STRING|AFCOMPONENT",
+    "how_to_choose": {
+      "STRING_LITERAL": "Direct variable name as string",
+      "AFCOMPONENT": "Variable name from a form field",
+      "FUNCTION_CALL": "Variable name from function result",
+      "GET_VARIABLE": "Variable name from another variable"
+    }
+  },
+  "VARIABLE_VALUE": {
+    "rule": "STRING_LITERAL | NUMERIC_LITERAL | BOOLEAN_LITERAL | AFCOMPONENT | FUNCTION_CALL | GET_VARIABLE",
+    "description": "CHOICE NODE: The value to store in a variable.",
+    "node_type": "CHOICE",
+    "dataType": "STRING|NUMBER|BOOLEAN|DATE|AFCOMPONENT|OBJECT|ARRAY",
+    "how_to_choose": {
+      "STRING_LITERAL": "Direct string value",
+      "NUMERIC_LITERAL": "Direct number value",
+      "BOOLEAN_LITERAL": "Direct boolean value",
+      "AFCOMPONENT": "Value from a form field",
+      "FUNCTION_CALL": "Value from function result",
+      "GET_VARIABLE": "Value from another variable"
+    }
+  },
+  "MEMBER_EXPRESSION": {
+    "rule": "PROPERTY_LIST of COMPONENT",
+    "choiceName": "Object Property",
+    "description": "SEQUENCE NODE: Access a property of a component. Contains 3 items: 1) PROPERTY_LIST, 2) 'of' literal, 3) COMPONENT. Used in SET_PROPERTY action.",
+    "node_type": "SEQUENCE",
+    "items_order": [
+      "1. PROPERTY_LIST - The property to access",
+      "2. 'of' literal token - {nodeName: 'of', value: null}",
+      "3. COMPONENT - The component whose property to access"
+    ],
+    "structure": {
+      "nodeName": "MEMBER_EXPRESSION",
+      "items": [
+        "PROPERTY_LIST object",
+        "{nodeName: 'of', value: null}",
+        "COMPONENT object"
+      ]
+    }
+  },
+  "PROPERTY_LIST": {
+    "rule": null,
+    "description": "TERMINAL NODE: A property name to access from a component. Common properties: visible, enabled, label, placeholder, required, value, readOnly.",
+    "node_type": "TERMINAL",
+    "dataType": "ANY",
+    "common_properties": ["visible", "enabled", "label", "placeholder", "required", "value", "readOnly"],
+    "value_structure": {
+      "nodeName": "PROPERTY_LIST",
+      "value": {
+        "displayName": "Property Name"
+      }
+    }
+  },
+  "PANEL": {
+    "rule": "VARIABLE",
+    "description": "TERMINAL NODE: A panel component. Use VARIABLE transparency - put panel object directly.",
+    "node_type": "TERMINAL",
+    "dataType": "PANEL",
+    "value_structure": {
+      "nodeName": "PANEL",
+      "value": {
+        "id": "$form.panelId",
+        "displayName": "Panel Name",
+        "type": "AFCOMPONENT|PANEL",
+        "name": "panelName",
+        "parent": "$form"
+      }
+    }
+  },
+  "BLOCK_STATEMENTS": {
+    "rule": "BLOCK_STATEMENT+",
+    "description": "ARRAY NODE: Contains one or more actions to execute. Each action mentioned in NL becomes a separate BLOCK_STATEMENT item.",
+    "node_type": "ARRAY",
+    "structure": {
+      "nodeName": "BLOCK_STATEMENTS",
+      "items": [
+        "BLOCK_STATEMENT object 1",
+        "BLOCK_STATEMENT object 2"
+      ]
+    }
+  },
+  "BLOCK_STATEMENT": {
+    "rule": "HIDE_STATEMENT | SHOW_STATEMENT | SET_VALUE_STATEMENT | FUNCTION_CALL | ENABLE_STATEMENT | DISABLE_STATEMENT | CLEAR_VALUE_STATEMENT | SUBMIT_FORM | RESET_FORM | VALIDATE_FORM | SAVE_FORM | NAVIGATE_TO | DISPATCH_EVENT | SET_FOCUS | ADD_INSTANCE | REMOVE_INSTANCE | NAVIGATE_IN_PANEL | SET_VARIABLE | SET_PROPERTY",
+    "description": "CHOICE NODE: Select action type based on NL keywords. NOTE: WSDL_STATEMENT and ASYNC_FUNCTION_CALL are NOT supported - use FUNCTION_CALL with custom functions instead.",
+    "node_type": "CHOICE",
+    "how_to_choose": {
+      "HIDE_STATEMENT": "hide, make invisible, don't show",
+      "SHOW_STATEMENT": "show, display, make visible, reveal",
+      "SET_VALUE_STATEMENT": "set to, assign, make equal, set value",
+      "FUNCTION_CALL": "call function, invoke, execute function, API call, calculate, or function name",
+      "ENABLE_STATEMENT": "enable, make editable",
+      "DISABLE_STATEMENT": "disable, make read-only",
+      "CLEAR_VALUE_STATEMENT": "clear, reset value, empty field",
+      "SUBMIT_FORM": "submit form, submit",
+      "RESET_FORM": "reset form, reset panel, reset",
+      "VALIDATE_FORM": "validate form, validate panel, validate field",
+      "SAVE_FORM": "save form, save",
+      "NAVIGATE_TO": "navigate to, go to URL, open URL",
+      "DISPATCH_EVENT": "dispatch event, trigger event, fire event",
+      "SET_FOCUS": "focus, set focus",
+      "ADD_INSTANCE": "add instance, add repeatable, add row",
+      "REMOVE_INSTANCE": "remove instance, remove repeatable, remove row",
+      "NAVIGATE_IN_PANEL": "navigate panel, go to next, go to previous, next panel, previous panel",
+      "SET_VARIABLE": "set variable, store variable",
+      "SET_PROPERTY": "set property, change property, update label, change placeholder"
+    },
+    "structure": {
+      "nodeName": "BLOCK_STATEMENT",
+      "choice": {"nodeName": "HIDE_STATEMENT or SHOW_STATEMENT or other", "items": []}
+    }
+  },
+  "HIDE_STATEMENT": {
+    "rule": "AFCOMPONENT",
+    "choiceName": "Hide",
+    "description": "Hides a component. Contains 1 item: AFCOMPONENT to hide. Use VARIABLE transparency - put form object directly.",
+    "node_type": "SEQUENCE",
+    "structure": {
+      "nodeName": "HIDE_STATEMENT",
+      "items": ["AFCOMPONENT object"]
+    }
+  },
+  "SHOW_STATEMENT": {
+    "rule": "AFCOMPONENT",
+    "choiceName": "Show",
+    "description": "Shows a component. Contains 1 item: AFCOMPONENT to show. Use VARIABLE transparency - put form object directly.",
+    "node_type": "SEQUENCE",
+    "structure": {
+      "nodeName": "SHOW_STATEMENT",
+      "items": ["AFCOMPONENT object"]
+    }
+  },
+  "ENABLE_STATEMENT": {
+    "rule": "AFCOMPONENT",
+    "choiceName": "Enable",
+    "description": "Enables a component. Contains 1 item: AFCOMPONENT to enable.",
+    "node_type": "SEQUENCE",
+    "structure": {
+      "nodeName": "ENABLE_STATEMENT",
+      "items": ["AFCOMPONENT object"]
+    }
+  },
+  "DISABLE_STATEMENT": {
+    "rule": "AFCOMPONENT",
+    "choiceName": "Disable",
+    "description": "Disables a component. Contains 1 item: AFCOMPONENT to disable.",
+    "node_type": "SEQUENCE",
+    "structure": {
+      "nodeName": "DISABLE_STATEMENT",
+      "items": ["AFCOMPONENT object"]
+    }
+  },
+  "CLEAR_VALUE_STATEMENT": {
+    "rule": "VALUE_FIELD",
+    "choiceName": "Clear Value of",
+    "description": "Clears value of a field. Contains 1 item: VALUE_FIELD to clear.",
+    "node_type": "SEQUENCE",
+    "structure": {
+      "nodeName": "CLEAR_VALUE_STATEMENT",
+      "items": ["VALUE_FIELD object"]
+    }
+  },
+  "SUBMIT_FORM": {
+    "rule": "",
+    "choiceName": "Submit Form",
+    "description": "Submits the form. No items needed - empty items array.",
+    "node_type": "TERMINAL",
+    "structure": {
+      "nodeName": "SUBMIT_FORM",
+      "items": []
+    }
+  },
+  "RESET_FORM": {
+    "rule": "VARIABLE",
+    "choiceName": "Reset",
+    "description": "Resets form, panel, or component to initial state. Contains 1 item: component to reset. Use VARIABLE transparency.",
+    "node_type": "SEQUENCE",
+    "structure": {
+      "nodeName": "RESET_FORM",
+      "items": ["AFCOMPONENT object (form, panel, or field)"]
+    }
+  },
+  "VALIDATE_FORM": {
+    "rule": "VARIABLE",
+    "choiceName": "Validate",
+    "description": "Validates form, panel, or component. Contains 1 item: component to validate. Use VARIABLE transparency.",
+    "node_type": "SEQUENCE",
+    "structure": {
+      "nodeName": "VALIDATE_FORM",
+      "items": ["AFCOMPONENT object (form, panel, or field)"]
+    }
+  },
+  "SAVE_FORM": {
+    "rule": "",
+    "choiceName": "Save Form",
+    "description": "Saves the form data. No items needed - empty items array.",
+    "node_type": "TERMINAL",
+    "structure": {
+      "nodeName": "SAVE_FORM",
+      "items": []
+    }
+  },
+  "NAVIGATE_TO": {
+    "rule": "NAVIGATE_TO_EXPRESSION in NAVIGATE_METHOD_OPTIONS",
+    "choiceName": "Navigate to URL",
+    "description": "Navigates to a URL. SEQUENCE with 3 items: 1) NAVIGATE_TO_EXPRESSION (URL), 2) 'in' literal, 3) NAVIGATE_METHOD_OPTIONS (window type).",
+    "node_type": "SEQUENCE",
+    "items_order": [
+      "1. NAVIGATE_TO_EXPRESSION - URL to navigate to (URL_LITERAL, COMPONENT, or FUNCTION_CALL)",
+      "2. 'in' literal token - {nodeName: 'in', value: null}",
+      "3. NAVIGATE_METHOD_OPTIONS - NEW_WINDOW, NEW_TAB, or SAME_TAB"
+    ],
+    "structure": {
+      "nodeName": "NAVIGATE_TO",
+      "items": [
+        "NAVIGATE_TO_EXPRESSION object",
+        "{nodeName: 'in', value: null}",
+        "NAVIGATE_METHOD_OPTIONS object"
+      ]
+    }
+  },
+  "NAVIGATE_TO_EXPRESSION": {
+    "rule": "URL_LITERAL | COMPONENT | FUNCTION_CALL",
+    "description": "CHOICE NODE: The URL to navigate to - can be literal URL, field value, or function result.",
+    "node_type": "CHOICE",
+    "how_to_choose": {
+      "URL_LITERAL": "Direct URL string like 'https://example.com'",
+      "COMPONENT": "URL from a form field",
+      "FUNCTION_CALL": "URL returned by a function"
+    }
+  },
+  "NAVIGATE_METHOD_OPTIONS": {
+    "rule": "NEW_WINDOW | NEW_TAB | SAME_TAB",
+    "description": "CHOICE NODE: How to open the URL.",
+    "node_type": "CHOICE",
+    "how_to_choose": {
+      "NEW_WINDOW": "Open in new browser window",
+      "NEW_TAB": "Open in new tab (default)",
+      "SAME_TAB": "Open in current tab"
+    }
+  },
+  "NEW_WINDOW": {
+    "choiceName": "New Window",
+    "description": "Open URL in a new browser window.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "NEW_TAB": {
+    "choiceName": "New Tab",
+    "description": "Open URL in a new browser tab.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "SAME_TAB": {
+    "choiceName": "Same Tab",
+    "description": "Open URL in the current browser tab.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "URL_LITERAL": {
+    "choiceName": "URL",
+    "description": "TERMINAL NODE: A literal URL string.",
+    "node_type": "TERMINAL",
+    "value_structure": {
+      "nodeName": "URL_LITERAL",
+      "value": "https://example.com"
+    }
+  },
+  "SET_FOCUS": {
+    "rule": "to AFCOMPONENT",
+    "choiceName": "Set Focus",
+    "description": "Sets focus to a component. SEQUENCE with 2 items: 1) 'to' literal, 2) AFCOMPONENT.",
+    "node_type": "SEQUENCE",
+    "items_order": [
+      "1. 'to' literal token - {nodeName: 'to', value: null}",
+      "2. AFCOMPONENT - The component to focus"
+    ],
+    "structure": {
+      "nodeName": "SET_FOCUS",
+      "items": [
+        "{nodeName: 'to', value: null}",
+        "AFCOMPONENT object"
+      ]
+    }
+  },
+  "ADD_INSTANCE": {
+    "rule": "of REPEATABLE_COMPONENT",
+    "choiceName": "Add Instance",
+    "description": "Adds instance to repeatable panel. SEQUENCE with 2 items: 1) 'of' literal, 2) REPEATABLE_COMPONENT.",
+    "node_type": "SEQUENCE",
+    "items_order": [
+      "1. 'of' literal token - {nodeName: 'of', value: null}",
+      "2. REPEATABLE_COMPONENT - The repeatable panel"
+    ],
+    "structure": {
+      "nodeName": "ADD_INSTANCE",
+      "items": [
+        "{nodeName: 'of', value: null}",
+        "REPEATABLE_COMPONENT object"
+      ]
+    }
+  },
+  "REMOVE_INSTANCE": {
+    "rule": "of REPEATABLE_COMPONENT",
+    "choiceName": "Remove Instance",
+    "description": "Removes instance from repeatable panel. SEQUENCE with 2 items: 1) 'of' literal, 2) REPEATABLE_COMPONENT.",
+    "node_type": "SEQUENCE",
+    "items_order": [
+      "1. 'of' literal token - {nodeName: 'of', value: null}",
+      "2. REPEATABLE_COMPONENT - The repeatable panel"
+    ],
+    "structure": {
+      "nodeName": "REMOVE_INSTANCE",
+      "items": [
+        "{nodeName: 'of', value: null}",
+        "REPEATABLE_COMPONENT object"
+      ]
+    }
+  },
+  "REPEATABLE_COMPONENT": {
+    "rule": "VARIABLE",
+    "description": "TERMINAL NODE: A repeatable panel component. Use VARIABLE transparency.",
+    "node_type": "TERMINAL",
+    "value_structure": {
+      "nodeName": "REPEATABLE_COMPONENT",
+      "value": {
+        "id": "$form.repeatablePanel",
+        "displayName": "Repeatable Panel",
+        "type": "AFCOMPONENT",
+        "name": "repeatablePanel",
+        "parent": "$form"
+      }
+    }
+  },
+  "NAVIGATE_IN_PANEL": {
+    "rule": "PANEL_FOCUS_OPTION of PANEL",
+    "choiceName": "Navigate in Panel",
+    "description": "Navigates within a wizard/tabbed panel. SEQUENCE with 3 items: 1) PANEL_FOCUS_OPTION, 2) 'of' literal, 3) PANEL.",
+    "node_type": "SEQUENCE",
+    "items_order": [
+      "1. PANEL_FOCUS_OPTION - NEXT_ITEM, PREVIOUS_ITEM, or FIRST_ITEM",
+      "2. 'of' literal token - {nodeName: 'of', value: null}",
+      "3. PANEL - The panel to navigate within"
+    ],
+    "structure": {
+      "nodeName": "NAVIGATE_IN_PANEL",
+      "items": [
+        "PANEL_FOCUS_OPTION object",
+        "{nodeName: 'of', value: null}",
+        "PANEL object"
+      ]
+    }
+  },
+  "PANEL_FOCUS_OPTION": {
+    "rule": "NEXT_ITEM | PREVIOUS_ITEM | FIRST_ITEM",
+    "description": "CHOICE NODE: Direction to navigate in panel.",
+    "node_type": "CHOICE",
+    "how_to_choose": {
+      "NEXT_ITEM": "Go to next panel/tab",
+      "PREVIOUS_ITEM": "Go to previous panel/tab",
+      "FIRST_ITEM": "Go to first panel/tab"
+    }
+  },
+  "NEXT_ITEM": {
+    "choiceName": "Next Item",
+    "description": "Navigate to the next item in the panel.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "PREVIOUS_ITEM": {
+    "choiceName": "Previous Item",
+    "description": "Navigate to the previous item in the panel.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "FIRST_ITEM": {
+    "choiceName": "First Item",
+    "description": "Navigate to the first item in the panel.",
+    "node_type": "TERMINAL",
+    "value": null
+  },
+  "SET_VARIABLE": {
+    "rule": "key VARIABLE_NAME value VARIABLE_VALUE on AFCOMPONENT",
+    "choiceName": "Set Variable Value",
+    "description": "Stores a variable value on a component. SEQUENCE with 6 items.",
+    "node_type": "SEQUENCE",
+    "items_order": [
+      "1. 'key' literal token - {nodeName: 'key', value: null}",
+      "2. VARIABLE_NAME - The variable key (string or expression)",
+      "3. 'value' literal token - {nodeName: 'value', value: null}",
+      "4. VARIABLE_VALUE - The value to store",
+      "5. 'on' literal token - {nodeName: 'on', value: null}",
+      "6. AFCOMPONENT - The component to store the variable on"
+    ],
+    "structure": {
+      "nodeName": "SET_VARIABLE",
+      "items": [
+        "{nodeName: 'key', value: null}",
+        "VARIABLE_NAME object",
+        "{nodeName: 'value', value: null}",
+        "VARIABLE_VALUE object",
+        "{nodeName: 'on', value: null}",
+        "AFCOMPONENT object"
+      ]
+    }
+  },
+  "SET_VALUE_STATEMENT": {
+    "rule": "VALUE_FIELD to EXPRESSION",
+    "choiceName": "Set Value of",
+    "description": "Sets field value. SEQUENCE with 3 items: 1) VALUE_FIELD (target), 2) 'to' literal token, 3) EXPRESSION (new value).",
+    "node_type": "SEQUENCE",
+    "items_order": [
+      "1. VALUE_FIELD - The field to set",
+      "2. 'to' literal token - {nodeName: 'to', value: null}",
+      "3. EXPRESSION - The value to set (use FUNCTION_CALL for calculated values)"
+    ],
+    "structure": {
+      "nodeName": "SET_VALUE_STATEMENT",
+      "items": [
+        "VALUE_FIELD object",
+        "{nodeName: 'to', value: null}",
+        "EXPRESSION object"
+      ]
+    }
+  },
+  "FUNCTION_CALL": {
+    "rule": "FUNCTION",
+    "choiceName": "Function Output",
+    "description": "TERMINAL NODE: Calls a custom or OOTB function. CRITICAL: Uses 'functionName' (object) + 'params' (array), NOT 'value.args'.",
+    "node_type": "TERMINAL",
+    "critical_structure_note": "Structure is {nodeName, parentNodeName, functionName: {id,displayName,type,args,impl}, params: [EXPRESSION...]}. DO NOT use value.args pattern.",
+    "value_structure": {
+      "nodeName": "FUNCTION_CALL",
+      "parentNodeName": "<nodeName of parent node>",
+      "functionName": {
+        "id": "funcId",
+        "displayName": "Function Description",
+        "type": "RETURN_TYPE",
+        "isDuplicate": false,
+        "displayPath": "",
+        "args": [{"type": "STRING", "name": "param1", "description": "param desc", "isMandatory": true}],
+        "impl": "$0($1)"
+      },
+      "params": [
+        {"nodeName": "EXPRESSION", "choice": {"nodeName": "...", "value": "..."}}
+      ]
+    }
+  },
+  "DISPATCH_EVENT": {
+    "rule": "STRING_LITERAL on AFCOMPONENT",
+    "choiceName": "Dispatch Event",
+    "description": "SEQUENCE NODE: Fires a custom event on a component. Contains 3 items: 1) STRING_LITERAL (event name), 2) 'on' literal token, 3) AFCOMPONENT (target component or form).",
+    "node_type": "SEQUENCE",
+    "items_order": [
+      "1. STRING_LITERAL - The event name to dispatch",
+      "2. 'on' literal token - {nodeName: 'on', value: null}",
+      "3. AFCOMPONENT - The target component or form to dispatch event on"
+    ],
+    "structure": {
+      "nodeName": "DISPATCH_EVENT",
+      "items": [
+        {"nodeName": "STRING_LITERAL", "value": "myCustomEvent"},
+        {"nodeName": "on", "value": null},
+        {"nodeName": "AFCOMPONENT", "value": {"id": "$form.componentID", "displayName": "Component Name", "type": "AFCOMPONENT"}}
+      ]
+    }
+  },
+  "SET_PROPERTY": {
+    "rule": "MEMBER_EXPRESSION to EXTENDED_EXPRESSION",
+    "choiceName": "Set Property",
+    "description": "SEQUENCE NODE: Sets a property of a component. Contains 3 items: 1) MEMBER_EXPRESSION (property of component), 2) 'to' literal token, 3) EXTENDED_EXPRESSION (new value).",
+    "node_type": "SEQUENCE",
+    "items_order": [
+      "1. MEMBER_EXPRESSION - The property to set (e.g., 'visible of TextInput', 'label of Email')",
+      "2. 'to' literal token - {nodeName: 'to', value: null}",
+      "3. EXTENDED_EXPRESSION - The value to set the property to"
+    ],
+    "structure": {
+      "nodeName": "SET_PROPERTY",
+      "items": [
+        {"nodeName": "MEMBER_EXPRESSION", "items": ["PROPERTY_LIST", "of literal", "COMPONENT"]},
+        {"nodeName": "to", "value": null},
+        {"nodeName": "EXTENDED_EXPRESSION", "choice": "value"}
+      ]
+    }
+  },
+  "EXTENDED_EXPRESSION": {
+    "rule": "COMPONENT | DATE_LITERAL | STRING_LITERAL | BOOLEAN_LITERAL | NUMERIC_LITERAL | FUNCTION_CALL",
+    "description": "CHOICE NODE: Extended expression type used in SET_PROPERTY. Similar to EXPRESSION but used for property values.",
+    "node_type": "CHOICE",
+    "how_to_choose": {
+      "COMPONENT": "Form field references",
+      "STRING_LITERAL": "Text values in quotes",
+      "NUMERIC_LITERAL": "Numbers",
+      "BOOLEAN_LITERAL": "true or false",
+      "DATE_LITERAL": "Date values",
+      "FUNCTION_CALL": "Function result or calculated value"
+    },
+    "structure": {
+      "nodeName": "EXTENDED_EXPRESSION",
+      "choice": {"nodeName": "STRING_LITERAL or other", "value": "varies"}
+    }
+  },
+  "STRING_LITERAL": {
+    "choiceName": "String",
+    "description": "TERMINAL NODE: A literal string value. Value is the string without quotes.",
+    "node_type": "TERMINAL",
+    "value_structure": {
+      "nodeName": "STRING_LITERAL",
+      "value": "actual string value"
+    }
+  },
+  "NUMERIC_LITERAL": {
+    "choiceName": "Number",
+    "description": "TERMINAL NODE: A literal number value.",
+    "node_type": "TERMINAL",
+    "value_structure": {
+      "nodeName": "NUMERIC_LITERAL",
+      "value": 42
+    }
+  },
+  "BOOLEAN_LITERAL": {
+    "rule": "True | False",
+    "choiceName": "Boolean",
+    "description": "CHOICE NODE: Boolean value. Select True or False.",
+    "node_type": "CHOICE",
+    "value_structure": {
+      "nodeName": "BOOLEAN_LITERAL",
+      "choice": {
+        "nodeName": "True",
+        "value": null
+      }
+    }
+  },
+  "DATE_LITERAL": {
+    "choiceName": "Date",
+    "description": "TERMINAL NODE: A date value in ISO format.",
+    "node_type": "TERMINAL",
+    "value_structure": {
+      "nodeName": "DATE_LITERAL",
+      "value": "2024-01-15"
+    }
+  },
+  "AFCOMPONENT": {
+    "rule": "VARIABLE",
+    "choiceName": "Form Object",
+    "description": "TERMINAL NODE: Any form component (used in actions like HIDE/SHOW). Use VARIABLE transparency - put form object directly here. Type should be 'AFCOMPONENT'.",
+    "node_type": "TERMINAL",
+    "value_structure": {
+      "nodeName": "AFCOMPONENT",
+      "value": {
+        "id": "$form.componentID",
+        "displayName": "Component Display Name",
+        "type": "AFCOMPONENT",
+        "isDuplicate": false,
+        "displayPath": "FORM/Parent/Component/",
+        "name": "componentName",
+        "parent": "$form.parentID",
+        "metadata": {}
+      }
+    }
+  },
+  "VALUE_FIELD": {
+    "rule": "VARIABLE",
+    "description": "TERMINAL NODE: A field that can have its value set. Use VARIABLE transparency - put form object directly. Use full type from treeJson.",
+    "node_type": "TERMINAL",
+    "value_structure": {
+      "nodeName": "VALUE_FIELD",
+      "value": {
+        "id": "$form.componentID",
+        "displayName": "Component Display Name",
+        "type": "AFCOMPONENT|FIELD|TEXT FIELD|STRING",
+        "isDuplicate": false,
+        "displayPath": "FORM/Parent/Component/",
+        "name": "componentName",
+        "parent": "$form.parentID",
+        "metadata": {}
+      }
+    },
+    "type_reference": "Use full type from treeJson: AFCOMPONENT|FIELD|TEXT FIELD|STRING (for text inputs), AFCOMPONENT|FIELD|NUMBER FIELD|NUMBER (for number inputs), etc."
+  },
+  "is clicked": {
+    "rule": null,
+    "choiceName": "is clicked",
+    "description": "TERMINAL NODE: Event trigger operator for button click. Used in TRIGGER_EVENT to specify that the rule triggers when a button is clicked.",
+    "node_type": "TERMINAL",
+    "operatorType": [["BOOLEAN", "BUTTON"]],
+    "applies_to": "BUTTON components",
+    "value": null
+  },
+  "is initialized": {
+    "rule": null,
+    "choiceName": "is initialized",
+    "description": "TERMINAL NODE: Event trigger operator for component initialization. Used in TRIGGER_EVENT to specify that the rule triggers when a component is initialized/loaded.",
+    "node_type": "TERMINAL",
+    "operatorType": [["BOOLEAN", "ANY"]],
+    "applies_to": "Any component",
+    "value": null
+  },
+  "is changed": {
+    "rule": null,
+    "choiceName": "is changed",
+    "description": "TERMINAL NODE: Event trigger operator for value change. Used in TRIGGER_EVENT to specify that the rule triggers when a field's value changes.",
+    "node_type": "TERMINAL",
+    "operatorType": [["BOOLEAN", "STRING|NUMBER|DATE|BOOLEAN|FILE ATTACHMENT|FILE"]],
+    "applies_to": "Fields with values (text input, number, date, checkbox, file attachment)",
+    "value": null
+  }
+}

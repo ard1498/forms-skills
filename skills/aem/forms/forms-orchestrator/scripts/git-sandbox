@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -e
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+source "$PLUGIN_ROOT/scripts/_resolve-workspace"
+cd "$FORMS_WORKSPACE"
+exec "$PLUGIN_ROOT/scripts/python3" -m git_sandbox.cli "$@"

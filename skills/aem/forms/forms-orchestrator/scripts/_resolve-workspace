@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# ─────────────────────────────────────────────────────────────────────────────
+# AEM Forms Skills — Workspace Resolver
+#
+# Shared helper sourced by all CLI tool entry points (scripts/* and skill scripts)
+# to ensure every tool runs inside the user's AEM Forms workspace regardless
+# of where the shell happens to be when the agent invokes the command.
+#
+# Resolution order (first match wins):
+#   1. FORMS_WORKSPACE already in environment  — e.g. exported by caller
+#   2. FORMS_WORKSPACE found in cwd's .env     — written during workspace setup
+#   3. Fall back to cwd                        — backwards compatible default
+#
+# Usage (inside a script):
+#   source "$PLUGIN_ROOT/scripts/_resolve-workspace"
+#   cd "$FORMS_WORKSPACE"
+# ─────────────────────────────────────────────────────────────────────────────
+
+if [ -n "${FORMS_WORKSPACE:-}" ] && [ -d "$FORMS_WORKSPACE" ]; then
+    # Priority 1: already in the environment
+    :
+elif [ -f "$PWD/.env" ]; then
+    # Priority 2: read from .env in current working directory
+    _fw="$(grep -m1 '^FORMS_WORKSPACE=' "$PWD/.env" 2>/dev/null | cut -d= -f2-)"
+    if [ -n "$_fw" ] && [ -d "$_fw" ]; then
+        FORMS_WORKSPACE="$_fw"
+    else
+        FORMS_WORKSPACE="$PWD"
+    fi
+    unset _fw
+else
+    # Priority 3: fall back to cwd
+    FORMS_WORKSPACE="$PWD"
+fi
+
+export FORMS_WORKSPACE

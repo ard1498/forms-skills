@@ -1,0 +1,16 @@
+{
+  "name": "rule_coder_bridge",
+  "version": "1.0.0",
+  "description": "Node.js CLI bridge for AEM Forms rule generation",
+  "private": true,
+  "scripts": {
+    "transform-form": "node cli/transform-form.js",
+    "parse-functions": "node cli/parse-functions.js",
+    "transform": "node cli/transform.js",
+    "summary": "node cli/summary.js",
+    "merge": "node cli/merge.js"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
+  }
+}
