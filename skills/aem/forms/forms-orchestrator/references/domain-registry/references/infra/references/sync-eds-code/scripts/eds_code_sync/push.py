@@ -175,7 +175,8 @@ def push_code(
             # config.github_repo is "owner/repo"; the URL pattern is
             # https://<branch>--<repo>--<owner>.aem.page/
             _owner, _repo = config.github_repo.split("/", 1)
-            preview_url = f"https://{branch_name}--{_repo}--{_owner}.aem.page/"
+            safe_branch = branch_name.replace("/", "--")
+            preview_url = f"https://{safe_branch}--{_repo}--{_owner}.aem.page/"
 
             pr_body = f"""Automated push from local development.
 
