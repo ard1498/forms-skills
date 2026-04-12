@@ -1,0 +1,77 @@
+{
+  "jcr:primaryType": "nt:unstructured",
+  "sling:resourceType": "fd/franklin/components/form/v1/form",
+  "fieldType": "form",
+  "fd:version": "2.1",
+  "title": "Contact Us",
+  "contactInfoPanel": {
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "core/fd/components/form/panelcontainer/v1/panelcontainer",
+    "fieldType": "panel",
+    "name": "contactInfoPanel",
+    "jcr:title": "Contact Information",
+    "fullName": {
+      "jcr:primaryType": "nt:unstructured",
+      "sling:resourceType": "core/fd/components/form/textinput/v1/textinput",
+      "fieldType": "text-input",
+      "name": "fullName",
+      "jcr:title": "Full Name",
+      "required": true,
+      "colspan": "6",
+      "minLength": 2,
+      "minLengthMessage": "Minimum 2 characters required",
+      "maxLength": 50,
+      "maxLengthMessage": "Maximum 50 characters allowed",
+      "mandatoryMessage": "Full Name is required"
+    },
+    "email": {
+      "jcr:primaryType": "nt:unstructured",
+      "sling:resourceType": "core/fd/components/form/emailinput/v1/emailinput",
+      "fieldType": "email",
+      "name": "email",
+      "jcr:title": "Email",
+      "required": true,
+      "colspan": "6",
+      "mandatoryMessage": "Email is required"
+    },
+    "phone": {
+      "jcr:primaryType": "nt:unstructured",
+      "sling:resourceType": "core/fd/components/form/telephoneinput/v1/telephoneinput",
+      "fieldType": "telephone-input",
+      "name": "phone",
+      "jcr:title": "Phone",
+      "required": false,
+      "colspan": "6"
+    }
+  },
+  "inquiryPanel": {
+    "jcr:primaryType": "nt:unstructured",
+    "sling:resourceType": "core/fd/components/form/panelcontainer/v1/panelcontainer",
+    "fieldType": "panel",
+    "name": "inquiryPanel",
+    "jcr:title": "Inquiry Details",
+    "inquiryType": {
+      "jcr:primaryType": "nt:unstructured",
+      "sling:resourceType": "core/fd/components/form/dropdown/v1/dropdown",
+      "fieldType": "drop-down",
+      "name": "inquiryType",
+      "jcr:title": "Inquiry Type",
+      "required": true,
+      "enum": ["General", "Support", "Sales"],
+      "enumNames": ["General", "Support", "Sales"],
+      "mandatoryMessage": "Please select an inquiry type"
+    },
+    "message": {
+      "jcr:primaryType": "nt:unstructured",
+      "sling:resourceType": "core/fd/components/form/textinput/v1/textinput",
+      "fieldType": "text-input",
+      "name": "message",
+      "jcr:title": "Message",
+      "required": true,
+      "multiLine": true,
+      "minLength": 10,
+      "minLengthMessage": "Message must be at least 10 characters",
+      "mandatoryMessage": "Message is required"
+    }
+  }
+}

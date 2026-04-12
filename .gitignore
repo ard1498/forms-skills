@@ -14,6 +14,7 @@ pip-wheel-metadata/
 # ── Build / Distribution ────────────────────────────────
 dist/
 build/
+!skills/**/build/
 *.whl
 
 # ── Test / Coverage ──────────────────────────────────────
