@@ -283,6 +283,12 @@ class RuleValidator:
             if action_name not in self._supported_actions:
                 errors.append(f"Action '{action_name}' is not supported in simplified grammar")
 
+            if action_name != 'FUNCTION_CALL':
+                errors.append(
+                    f"BLOCK_STATEMENT {i} uses '{action_name}' — only FUNCTION_CALL is allowed in THEN/ELSE blocks. "
+                    f"Move this logic into a custom function and call it via FUNCTION_CALL."
+                )
+
         return errors
 
     def _validate_subset_compliance(self, node: Any) -> List[str]:

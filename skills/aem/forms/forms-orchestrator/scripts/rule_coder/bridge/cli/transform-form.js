@@ -76,21 +76,51 @@ function getPythonPath() {
 }
 
 /**
+ * Find the workspace root by walking up from a directory until we find either:
+ * 1. A directory containing "repo/"
+ * 2. A directory named "repo" (then return its parent)
+ * @param {string} startDir - Directory to start walking from
+ * @returns {string|null} Workspace root path or null if not found
+ */
+function findWorkspaceRoot(startDir) {
+  let current = startDir;
+  for (let i = 0; i < 16; i += 1) {
+    if (fs.existsSync(path.join(current, "repo"))) {
+      return current;
+    }
+    if (path.basename(current) === "repo") {
+      return path.dirname(current);
+    }
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return null;
+}
+
+/**
  * Convert JCR form JSON to CRISPR format using Python script
  * @param {object} jcrJson - The JCR form JSON
+ * @param {string|null} workspaceRoot - Workspace root for fragment resolution
  * @returns {object} The CRISPR form JSON
  */
-function convertJcrToCrispr(jcrJson) {
+function convertJcrToCrispr(jcrJson, workspaceRoot) {
   const scriptPath = path.join(__dirname, "jcr-to-crispr.py");
   const pythonPath = getPythonPath();
+  const baseDirArg = workspaceRoot
+    ? ` --base-dir "${workspaceRoot.replace(/"/g, '\\"')}"`
+    : "";
 
   try {
     // Run Python script with JSON input via stdin
-    const result = execSync(`"${pythonPath}" "${scriptPath}" --stdin`, {
+    const result = execSync(
+      `"${pythonPath}" "${scriptPath}" --stdin${baseDirArg}`,
+      {
       input: JSON.stringify(jcrJson),
       encoding: "utf-8",
       maxBuffer: 10 * 1024 * 1024, // 10MB buffer for large forms
-    });
+      },
+    );
 
     const parsed = JSON.parse(result);
 
@@ -117,9 +147,10 @@ function convertJcrToCrispr(jcrJson) {
 /**
  * Transform form JSON to treeJson
  * @param {object} formJson - The form definition JSON (JCR or CRISPR format)
+ * @param {string|null} workspaceRoot - Workspace root for fragment resolution
  * @returns {{treeJson: object, converted: boolean}} The transformed treeJson and conversion flag
  */
-function transformFormJson(formJson) {
+function transformFormJson(formJson, workspaceRoot) {
   if (!af.expeditor.author.ExpressionEditorTree) {
     throw new Error(
       "ExpressionEditorTree not loaded. Check that the JS file exists.",
@@ -134,7 +165,7 @@ function transformFormJson(formJson) {
 
   // Auto-detect and convert JCR format to CRISPR
   if (isJcrFormat(formJson)) {
-    inputJson = convertJcrToCrispr(formJson);
+    inputJson = convertJcrToCrispr(formJson, workspaceRoot || null);
     converted = true;
   }
 
@@ -164,6 +195,7 @@ function main() {
   }
 
   let formJson;
+  let workspaceRoot = process.env.FORMS_WORKSPACE || null;
 
   if (args[0] === "--stdin") {
     // Read from stdin
@@ -180,6 +212,7 @@ function main() {
       );
       process.exit(1);
     }
+    workspaceRoot = workspaceRoot || findWorkspaceRoot(process.cwd());
   } else {
     // Read from file
     const filePath = path.resolve(args[0]);
@@ -205,11 +238,12 @@ function main() {
       );
       process.exit(1);
     }
+    workspaceRoot = workspaceRoot || findWorkspaceRoot(path.dirname(filePath));
   }
 
   // Transform the form JSON
   try {
-    const { treeJson, converted } = transformFormJson(formJson);
+    const { treeJson, converted } = transformFormJson(formJson, workspaceRoot);
 
     console.log(
       JSON.stringify(

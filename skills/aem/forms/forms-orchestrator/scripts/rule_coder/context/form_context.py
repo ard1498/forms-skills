@@ -47,7 +47,8 @@ class FormContext:
     def load_from_form_json(
         cls,
         form_json: Dict[str, Any],
-        custom_functions_path: Optional[str] = None
+        custom_functions_path: Optional[str] = None,
+        form_json_path: Optional[str] = None,
     ) -> 'FormContext':
         """
         Create FormContext from a form JSON object.
@@ -55,12 +56,14 @@ class FormContext:
         Args:
             form_json: The form definition JSON (not yet transformed).
             custom_functions_path: Optional path to custom functions JS file.
+            form_json_path: Optional path to the source form JSON. When provided,
+                the transformer can preserve workspace-relative fragment resolution.
 
         Returns:
             FormContext instance.
         """
         # Transform form JSON to treeJson
-        tree_json = cls._transform_form_json(form_json)
+        tree_json = cls._transform_form_json(form_json, form_json_path=form_json_path)
 
         # Load functions
         functions = cls._load_all_functions(custom_functions_path)
@@ -89,7 +92,11 @@ class FormContext:
         with open(form_json_path, 'r') as f:
             form_json = json.load(f)
 
-        return cls.load_from_form_json(form_json, custom_functions_path)
+        return cls.load_from_form_json(
+            form_json,
+            custom_functions_path,
+            form_json_path=form_json_path,
+        )
 
     @classmethod
     def load_from_tree_json(
@@ -116,7 +123,10 @@ class FormContext:
         )
 
     @staticmethod
-    def _transform_form_json(form_json: Dict[str, Any]) -> Dict[str, Any]:
+    def _transform_form_json(
+        form_json: Dict[str, Any],
+        form_json_path: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Transform form definition JSON to treeJson using the bridge CLI.
 
@@ -131,14 +141,21 @@ class FormContext:
         if not transform_script.exists():
             raise FileNotFoundError(f"Transform form CLI not found: {transform_script}")
 
-        # Run the transform-form.js CLI with stdin input
-        result = subprocess.run(
-            ['node', str(transform_script), '--stdin'],
-            input=json.dumps(form_json),
-            capture_output=True,
-            text=True,
-            cwd=str(BRIDGE_CLI_PATH.parent)
-        )
+        if form_json_path:
+            result = subprocess.run(
+                ['node', str(transform_script), str(form_json_path)],
+                capture_output=True,
+                text=True,
+                cwd=str(BRIDGE_CLI_PATH.parent)
+            )
+        else:
+            result = subprocess.run(
+                ['node', str(transform_script), '--stdin'],
+                input=json.dumps(form_json),
+                capture_output=True,
+                text=True,
+                cwd=str(BRIDGE_CLI_PATH.parent)
+            )
 
         if result.returncode != 0:
             error_output = result.stderr or result.stdout
