@@ -22,10 +22,12 @@ class AemFdmClient:
         self.host = config.aem_host.rstrip("/")
         self.auth_header = config.auth_header
         self.session = requests.Session()
-        self.session.headers.update({
-            "Authorization": self.auth_header,
-            "Accept": "application/json",
-        })
+        self.session.headers.update(
+            {
+                "Authorization": self.auth_header,
+                "Accept": "application/json",
+            }
+        )
         self.session.timeout = 30
 
     def _request(self, path: str) -> Any:
@@ -147,7 +149,9 @@ class AemFdmClient:
                 if content and content.get("type") == "api-integration":
                     api_integration_fdms.append(key)
 
-        print(f"  Found {len(api_integration_fdms)} api-integration FDMs, fetching details...")
+        print(
+            f"  Found {len(api_integration_fdms)} api-integration FDMs, fetching details..."
+        )
 
         # Fetch each FDM individually to get inputJson
         apis = []
@@ -208,7 +212,11 @@ class AemFdmClient:
         """Parse inputJson string to extract API configuration."""
         if not input_json_str:
             # Fallback to content fields if inputJson not available
-            if not content.get("name") and not content.get("jcr:title") and not content.get("serviceEndPoint"):
+            if (
+                not content.get("name")
+                and not content.get("jcr:title")
+                and not content.get("serviceEndPoint")
+            ):
                 return None  # Not enough info
             return {
                 "name": content.get("name") or content.get("jcr:title") or "unknown",
@@ -234,7 +242,8 @@ class AemFdmClient:
                         params[param_name] = {
                             "type": param.get("type", "string"),
                             "required": param.get("required", False),
-                            "description": param.get("description") or f"{param.get('in', 'body')} parameter",
+                            "description": param.get("description")
+                            or f"{param.get('in', 'body')} parameter",
                             "default": param.get("defaultValue"),
                             "in": param.get("in", "body"),
                         }
@@ -260,7 +269,9 @@ class AemFdmClient:
             body_structure = self._detect_body_structure(params)
 
             return {
-                "name": input_json.get("displayName") or content.get("name") or "unknown",
+                "name": input_json.get("displayName")
+                or content.get("name")
+                or "unknown",
                 "description": f"{input_json.get('operationName') or input_json.get('displayName') or content.get('name')} API",
                 "endpoint": input_json.get("url") or content.get("serviceEndPoint", ""),
                 "method": input_json.get("method", "POST"),
@@ -343,7 +354,9 @@ class AemFdmClient:
                         # Update existing param or create new one
                         if param_name in params:
                             # Update required field from swagger
-                            params[param_name]["required"] = param.get("required", False)
+                            params[param_name]["required"] = param.get(
+                                "required", False
+                            )
                             if param.get("description"):
                                 params[param_name]["description"] = param["description"]
                         else:
@@ -351,7 +364,8 @@ class AemFdmClient:
                             params[param_name] = {
                                 "type": schema.get("type", "string"),
                                 "required": param.get("required", False),
-                                "description": param.get("description") or f"{param.get('in')} parameter",
+                                "description": param.get("description")
+                                or f"{param.get('in')} parameter",
                                 "in": param.get("in"),
                             }
                             if schema.get("default") is not None:
