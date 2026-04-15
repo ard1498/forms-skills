@@ -65,8 +65,7 @@ class AuthManager:
 
         # Fetch from AEM genai/token endpoint (stage/prod)
         try:
-            headers = {"X-Adobe-Accept-Unsupported-API": "1"}
-            response = self.client.get("/adobe/forms/genai/token", headers=headers)
+            response = self.client.get("/adobe/forms/genai/token")
             data = response.json()
 
             # Use client_id from response, but allow config override
@@ -92,3 +91,4 @@ class AuthManager:
     def clear_token_cache(self) -> None:
         """Clear the cached cloud token."""
         self._cloud_token = None
+
