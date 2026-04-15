@@ -7,13 +7,15 @@ Features:
 - Template-based code generation (Jinja2)
 - Support for path, query, header, and body parameters
 - Support for different HTTP methods (GET, POST, PUT, DELETE, PATCH)
-- Configurable body structure (requestString wrapper)
+- Configurable body structure (single wrapper, multi-root, or none)
 """
 
+import json
 import re
 from pathlib import Path
+from typing import Any
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 
 def _needs_quoting(key: str) -> bool:
@@ -113,7 +115,6 @@ def _prepare_params(params: dict) -> dict:
     required_params = []
 
     for name, config in params.items():
-        # Use flat name (strip requestString. prefix)
         leaf_name = name.split(".")[-1] if "." in name else name
         location = config.get("in", "body")
 
@@ -154,6 +155,55 @@ def _prepare_params(params: dict) -> dict:
     }
 
 
+def _build_body_tree(raw_params: dict) -> dict:
+    """Build a nested tree from dotted body-param apiKeys.
+
+    Given params like:
+      {"RequestPayload.userAgent": ..., "RequestPayload.journeyInfo.journeyID": ...}
+    Returns:
+      {"RequestPayload": {"userAgent": {"_leaf": {...}}, "journeyInfo": {"journeyID": {"_leaf": {...}}}}}
+    """
+    tree: dict = {}
+    for key, config in raw_params.items():
+        if config.get("in", "body") != "body":
+            continue
+        parts = key.split(".")
+        current = tree
+        for i, part in enumerate(parts):
+            if i == len(parts) - 1:
+                current[part] = {"_leaf": {
+                    "name": part,
+                    "default": config.get("default"),
+                }}
+            else:
+                if part not in current:
+                    current[part] = {}
+                node = current[part]
+                if "_leaf" in node:
+                    node.pop("_leaf")
+                current = node
+    return tree
+
+
+def _render_body_lines(tree: dict, indent: int = 4) -> list[str]:
+    """Recursively render a body tree as indented JS object lines."""
+    lines: list[str] = []
+    pad = " " * indent
+    for key, value in tree.items():
+        if "_leaf" in value:
+            leaf = value["_leaf"]
+            line = f"{pad}{_js_key(leaf['name'])}: params{_js_access(leaf['name'])}"
+            if leaf.get("default") is not None:
+                line += f" ?? {json.dumps(leaf['default'])}"
+            line += ","
+            lines.append(line)
+        else:
+            lines.append(f"{pad}{_js_key(key)}: {{")
+            lines.extend(_render_body_lines(value, indent + 2))
+            lines.append(f"{pad}}},")
+    return lines
+
+
 def generate_client_file(api_key: str, api_config: dict, env: Environment = None) -> str:
     """Generate JavaScript client file content for an API.
 
@@ -170,7 +220,26 @@ def generate_client_file(api_key: str, api_config: dict, env: Environment = None
 
     template = env.get_template("api-client.js.j2")
 
-    param_groups = _prepare_params(api_config.get("params", {}))
+    raw_params = api_config.get("params", {})
+    param_groups = _prepare_params(raw_params)
+
+    body_structure = api_config.get("bodyStructure", "none")
+
+    # Build the body object lines from the full dotted param keys
+    if body_structure and body_structure != "none":
+        body_tree = _build_body_tree(raw_params)
+        body_lines = _render_body_lines(body_tree, indent=4)
+    elif param_groups["body_params"]:
+        # Flat body — render params directly
+        body_lines = []
+        for p in param_groups["body_params"]:
+            line = f"    {_js_key(p['name'])}: params{_js_access(p['name'])}"
+            if p.get("default") is not None:
+                line += f" ?? {json.dumps(p['default'])}"
+            line += ","
+            body_lines.append(line)
+    else:
+        body_lines = []
 
     context = {
         "api_key": api_key,
@@ -179,7 +248,7 @@ def generate_client_file(api_key: str, api_config: dict, env: Environment = None
         "description": api_config.get("description", f"{api_key} API"),
         "endpoint": api_config.get("endpoint", ""),
         "method": api_config.get("method", "POST").upper(),
-        "body_structure": api_config.get("bodyStructure", "requestString"),
+        "body_lines": body_lines,
         "success_condition": api_config.get("successCondition"),
         **param_groups,
     }

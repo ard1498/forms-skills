@@ -66,17 +66,9 @@ export async function {{ function_name }}(params, globals) {
 {% if body_params and method in ['POST', 'PUT', 'PATCH'] %}
 
   var body = {
-{% if body_structure and body_structure != 'none' %}
-    {{ body_structure }}: {
-{% for p in body_params %}
-      {{ p.name | js_key }}: params{{ p.name | js_access }}{% if p.default is not none %} ?? {{ p.default | tojson }}{% endif %},
+{% for line in body_lines %}
+{{ line }}
 {% endfor %}
-    }
-{% else %}
-{% for p in body_params %}
-    {{ p.name | js_key }}: params{{ p.name | js_access }}{% if p.default is not none %} ?? {{ p.default | tojson }}{% endif %},
-{% endfor %}
-{% endif %}
   };
 {% endif %}
 

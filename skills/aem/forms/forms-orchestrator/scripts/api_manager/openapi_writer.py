@@ -62,7 +62,6 @@ def _separate_params_by_location(params: dict) -> dict:
     body_params = {}
 
     for param_name, param_config in params.items():
-        # Use flat name (strip requestString. prefix)
         flat_name = param_name.split(".")[-1] if "." in param_name else param_name
         location = param_config.get("in", "body")
 
@@ -147,6 +146,41 @@ def _build_response_properties(response: dict) -> dict:
     return properties
 
 
+def _build_nested_schema(params: dict) -> dict:
+    """Build nested OpenAPI schema properties from dotted body-param keys.
+
+    Given params like:
+      {"RequestPayload.userAgent": {...}, "RequestPayload.journeyInfo.journeyID": {...}}
+    Returns nested OpenAPI properties:
+      {"RequestPayload": {"type": "object", "properties": {"userAgent": {...}, "journeyInfo": {...}}}}
+    """
+    root: dict[str, Any] = {}
+
+    for key, config in params.items():
+        if config.get("in", "body") != "body":
+            continue
+
+        parts = key.split(".")
+        current = root
+
+        for i, part in enumerate(parts):
+            if i == len(parts) - 1:
+                prop: dict[str, Any] = {"type": config.get("type", "string")}
+                if config.get("description"):
+                    prop["description"] = config["description"]
+                if config.get("default") is not None:
+                    prop["default"] = config["default"]
+                current[part] = prop
+            else:
+                if part not in current:
+                    current[part] = {"type": "object", "properties": {}}
+                elif "properties" not in current[part]:
+                    current[part] = {"type": "object", "properties": {}}
+                current = current[part]["properties"]
+
+    return root
+
+
 def write_api_to_openapi(api_config: dict, validate_output: bool = True) -> str:
     """Convert API config to OpenAPI 3.0 YAML string.
 
@@ -169,7 +203,7 @@ def write_api_to_openapi(api_config: dict, validate_output: bool = True) -> str:
     method = api_config.get("method", "POST").lower()
     params = api_config.get("params", {})
     response = api_config.get("response", {})
-    body_structure = api_config.get("bodyStructure", "requestString")
+    body_structure = api_config.get("bodyStructure", "none")
     success_condition = api_config.get("successCondition")
 
     # Create spec
@@ -238,20 +272,11 @@ def write_api_to_openapi(api_config: dict, validate_output: bool = True) -> str:
     # Add RequestBody schema (only if there are body params)
     if body_params:
         if body_structure and body_structure != "none":
-            # Wrap in body structure (e.g., requestString)
-            spec.components.schema(
-                "RequestBody",
-                {
-                    "type": "object",
-                    "properties": {
-                        body_structure: {
-                            "type": "object",
-                            "description": "SDK wraps flat params into this structure",
-                            "properties": body_params,
-                        }
-                    },
-                },
-            )
+            body_schema = _build_nested_schema(params)
+            spec.components.schema("RequestBody", {
+                "type": "object",
+                "properties": body_schema,
+            })
         else:
             # Direct properties without wrapper
             spec.components.schema(

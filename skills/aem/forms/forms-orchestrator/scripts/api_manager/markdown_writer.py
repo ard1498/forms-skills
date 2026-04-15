@@ -62,14 +62,13 @@ def write_api_to_markdown(api_config: dict) -> str:
         lines.append("## Request Parameters")
         lines.append("")
         lines.append(
-            "Parameters use flat names for SDK DX. The SDK wraps body params into `requestString` internally."
+            "Parameters use flat names for SDK DX. The SDK wraps body params into the appropriate structure internally."
         )
         lines.append("")
         lines.append("| Parameter | Type | Required | Default | Location | Description |")
         lines.append("|-----------|------|----------|---------|----------|-------------|")
 
         for name, config in params.items():
-            # Strip requestString. prefix for flat SDK interface
             flat_name = name.split(".")[-1] if "." in name else name
             required = "Yes" if config.get("required") else "No"
             default_val = config.get("default") if config.get("default") is not None else "-"
@@ -215,7 +214,7 @@ def generate_index(apis: list[dict], sync_stats: dict = None) -> str:
         "```javascript",
         "import { customerIdentification } from './api-clients';",
         "",
-        "// Pass flat params - SDK wraps into requestString internally",
+        "// Pass flat params - SDK wraps into the correct body structure internally",
         "const response = await customerIdentification({",
         "  mobileNumber: '9876543210',",
         "  dateOfBirth: '01/01/1990'",
@@ -234,7 +233,7 @@ def generate_index(apis: list[dict], sync_stats: dict = None) -> str:
         "const response = await globals.functions.request({",
         "  url: '/api/customerIdentification',",
         "  method: 'POST',",
-        "  body: { requestString: { mobileNumber: '9876543210' } }",
+        "  body: { mobileNumber: '9876543210' }",
         "});",
         "```",
         "",

@@ -45,7 +45,7 @@ def parse_openapi_file(filepath: Path) -> Optional[dict]:
         api_config["encryptionRequired"] = aem_config.get("encryptionRequired", False)
         api_config["authType"] = aem_config.get("authType", "None")
         api_config["isOutputAnArray"] = aem_config.get("isOutputAnArray", False)
-        api_config["bodyStructure"] = aem_config.get("bodyStructure", "requestString")
+        api_config["bodyStructure"] = aem_config.get("bodyStructure", "none")
         if aem_config.get("fdmName"):
             api_config["fdmName"] = aem_config["fdmName"]
 
@@ -88,7 +88,7 @@ def parse_openapi_file(filepath: Path) -> Optional[dict]:
                     ref_path = schema["$ref"]
                     schema = _resolve_ref(doc, ref_path)
 
-                # Extract params from requestString
+                # Extract params from request body schema
                 if schema:
                     _extract_params_from_schema(schema, api_config)
 
@@ -129,26 +129,31 @@ def _resolve_ref(doc: dict, ref: str) -> dict:
 
 
 def _extract_params_from_schema(schema: dict, api_config: dict) -> None:
-    """Extract parameters from request body schema."""
+    """Extract parameters from request body schema.
+
+    Handles three body layouts:
+    - Single wrapper: { "requestString": { props } }
+    - Multi-root: { "requestContext": { props }, "requestData": { props } }
+    - Flat (no wrapper): { prop1, prop2, ... }
+
+    Detection: a top-level property whose type is "object" and that has its
+    own "properties" is treated as a wrapper/root.
+
+    Recursively builds dotted param keys (e.g. "RequestPayload.journeyInfo.journeyID")
+    to preserve the full nesting structure.
+    """
     properties = schema.get("properties", {})
 
-    # Check for requestString wrapper
-    if "requestString" in properties:
-        request_string = properties["requestString"]
-        inner_props = request_string.get("properties", {})
-        # OpenAPI spec: required is at schema level, not on each property
-        required_fields = set(request_string.get("required", []))
-        for param_name, param_schema in inner_props.items():
-            api_config["params"][param_name] = {
-                "type": param_schema.get("type", "string"),
-                "description": param_schema.get("description", ""),
-                "in": "body",
-            }
-            if "default" in param_schema:
-                api_config["params"][param_name]["default"] = param_schema["default"]
-            # Check required array at schema level (OpenAPI standard)
-            if param_name in required_fields:
-                api_config["params"][param_name]["required"] = True
+    # Detect wrapper roots: top-level object properties that have nested properties
+    wrapper_roots = {
+        name: prop_schema
+        for name, prop_schema in properties.items()
+        if prop_schema.get("type") == "object" and prop_schema.get("properties")
+    }
+
+    if wrapper_roots:
+        for root_name, root_schema in wrapper_roots.items():
+            _extract_nested_params(root_schema, api_config, prefix=root_name)
     else:
         # Direct properties without wrapper
         required_fields = set(schema.get("required", []))
@@ -162,6 +167,35 @@ def _extract_params_from_schema(schema: dict, api_config: dict) -> None:
                 api_config["params"][param_name]["default"] = param_schema["default"]
             if param_name in required_fields:
                 api_config["params"][param_name]["required"] = True
+
+
+def _extract_nested_params(
+    schema: dict, api_config: dict, prefix: str
+) -> None:
+    """Recursively extract params from a nested schema, building dotted paths.
+
+    For a schema like {properties: {journeyInfo: {type: object, properties: {journeyID: ...}}}}
+    with prefix "RequestPayload", produces params keyed as
+    "RequestPayload.journeyInfo.journeyID".
+    """
+    inner_props = schema.get("properties", {})
+    required_fields = set(schema.get("required", []))
+
+    for param_name, param_schema in inner_props.items():
+        full_name = f"{prefix}.{param_name}"
+
+        if param_schema.get("type") == "object" and param_schema.get("properties"):
+            _extract_nested_params(param_schema, api_config, prefix=full_name)
+        else:
+            api_config["params"][full_name] = {
+                "type": param_schema.get("type", "string"),
+                "description": param_schema.get("description", ""),
+                "in": "body",
+            }
+            if "default" in param_schema:
+                api_config["params"][full_name]["default"] = param_schema["default"]
+            if param_name in required_fields:
+                api_config["params"][full_name]["required"] = True
 
 
 def _extract_response_from_schema(

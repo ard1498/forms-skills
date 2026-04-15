@@ -256,6 +256,9 @@ class AemFdmClient:
             if swagger_spec:
                 self._enrich_from_swagger(swagger_spec, params, response)
 
+            # Detect body structure from inputMapping apiKeys
+            body_structure = self._detect_body_structure(params)
+
             return {
                 "name": input_json.get("displayName") or content.get("name") or "unknown",
                 "description": f"{input_json.get('operationName') or input_json.get('displayName') or content.get('name')} API",
@@ -263,6 +266,7 @@ class AemFdmClient:
                 "method": input_json.get("method", "POST"),
                 "params": params,
                 "response": response,
+                "bodyStructure": body_structure,
                 "contentType": input_json.get("contentType", "application/json"),
                 "authType": input_json.get("authType", "None"),
                 "encryptionRequired": input_json.get("encryptionRequired", False),
@@ -272,6 +276,44 @@ class AemFdmClient:
         except json.JSONDecodeError as e:
             print(f"  Warning: Failed to parse inputJson: {e}")
             return None
+
+    @staticmethod
+    def _detect_body_structure(params: dict) -> str:
+        """Detect body wrapper structure from param apiKey prefixes.
+
+        Inspects the first dotted segment of body-param keys to determine
+        how the request body is wrapped.
+
+        Returns:
+            - "none" if body params have no dotted prefix (flat)
+            - A single wrapper name (e.g. "requestString", "RequestPayload")
+            - Comma-separated roots for multi-root bodies
+              (e.g. "requestContext,requestData")
+        """
+        roots: list[str] = []
+        seen: set[str] = set()
+        has_body_params = False
+
+        for key, config in params.items():
+            if config.get("in", "body") != "body":
+                continue
+            has_body_params = True
+            if "." in key:
+                root = key.split(".")[0]
+                if root not in seen:
+                    seen.add(root)
+                    roots.append(root)
+
+        if not has_body_params:
+            return "none"
+
+        if not roots:
+            return "none"
+
+        if len(roots) == 1:
+            return roots[0]
+
+        return ",".join(roots)
 
     def _enrich_from_swagger(
         self, swagger_spec: dict, params: dict, response: dict
