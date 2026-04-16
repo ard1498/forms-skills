@@ -2,11 +2,11 @@
 
 ## Status
 
-- Status: `in-progress`
+- Status: `done`
 - Depends on: PR-01, PR-02
 - Branch: `merge-xpl/create-function-sync`
-- PR URL: `TBD`
-- Merge commit: `TBD`
+- PR URL: `#6`
+- Merge commit: `ed33d23`
 
 ## Scope
 

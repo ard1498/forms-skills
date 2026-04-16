@@ -185,23 +185,27 @@ The tool auto-generates context from form.json (component tree + custom function
 
 ### Step 7.1: If Save Fails
 
-```bash
-# Debug with stack trace
-DEBUG=true "${CLAUDE_PLUGIN_ROOT}/forms-orchestrator/scripts/rule-save" <rule.json> \
-  --rule-store <form>.rule.json --form <form>.form.json
-```
+If save fails, see [references/troubleshooting.md](references/troubleshooting.md).
 
-| Error | Fix |
-|-------|-----|
-| `Cannot read properties of undefined (reading 'nodeName')` | Wrong item structure — check grammar for correct item order |
-| `Field 'X' not found in form` | Field name doesn't exist in form.json — verify field name |
+### Step 7.2: Discover Field Paths (MANDATORY before implementation)
+
+For rules with custom functions, run `rule-transform` and trace the **exact qualified path** for every field the function will access. Fragment references add hidden nesting.
 
 ```bash
-# Validate against grammar source of truth
-"${CLAUDE_PLUGIN_ROOT}/forms-orchestrator/scripts/rule-grammar" | jq '.<NODE_NAME>'
+"${CLAUDE_PLUGIN_ROOT}/forms-orchestrator/scripts/rule-transform" <form>.form.json
 ```
 
-### Re-save Existing Rules
+Example: `accountSelectionWrapper` looks direct but is actually at `wrapper.accountSelectionPanel.accountSelectionWrapper`. Wrong paths cause NPE at runtime.
+
+### Step 8: Implement Functions
+
+Replace `// TODO` stubs with real logic. See [references/apis.md](references/apis.md) for `globals.functions.*` APIs.
+
+**Do NOT change function signatures. Do NOT re-run save-rule.**
+
+For API calls, discover first: `"${CLAUDE_PLUGIN_ROOT}/forms-orchestrator/scripts/api-manager" list | grep -i <keyword>`
+
+### Step 9: Re-save Existing Rules
 
 Regenerate `fd:events` for all rules in a rule store:
 
