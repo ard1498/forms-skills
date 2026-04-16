@@ -186,12 +186,6 @@ def _find_metadata_by_original_path(
     return None, None
 
 
-# Universal Editor API endpoints
-UNIVERSAL_EDITOR_URL = "https://universal-editor-service.adobe.io/add"
-UNIVERSAL_EDITOR_PATCH_URL = "https://universal-editor-service.adobe.io/patch"
-UNIVERSAL_EDITOR_DETAILS_URL = "https://universal-editor-service.adobe.io/details"
-UNIVERSAL_EDITOR_REMOVE_URL = "https://universal-editor-service.adobe.io/remove"
-
 
 def get_csrf_token(client: AEMClient) -> str:
     """
@@ -718,7 +712,7 @@ def remove_form_node(
     }
 
     try:
-        response = requests.post(UNIVERSAL_EDITOR_REMOVE_URL, json=payload, headers=headers)
+        response = requests.post(f"{config.ue_service_url}/remove", json=payload, headers=headers)
 
         if not response.ok:
             raise FormSyncError(
@@ -782,7 +776,7 @@ def add_form_node(
     }
 
     try:
-        response = requests.post(UNIVERSAL_EDITOR_URL, json=payload, headers=headers)
+        response = requests.post(f"{config.ue_service_url}/add", json=payload, headers=headers)
 
         if not response.ok:
             raise FormSyncError(

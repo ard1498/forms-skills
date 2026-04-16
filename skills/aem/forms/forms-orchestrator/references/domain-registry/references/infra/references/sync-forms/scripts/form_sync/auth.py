@@ -65,7 +65,8 @@ class AuthManager:
 
         # Fetch from AEM genai/token endpoint (stage/prod)
         try:
-            response = self.client.get("/adobe/forms/genai/token")
+            headers = {"X-Adobe-Accept-Unsupported-API": "1"}
+            response = self.client.get("/adobe/forms/genai/token", headers=headers)
             data = response.json()
 
             # Use client_id from response, but allow config override
