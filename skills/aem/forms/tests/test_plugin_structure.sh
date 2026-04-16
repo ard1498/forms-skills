@@ -134,7 +134,6 @@ done
 # Skill-local script directories
 SKILL_SCRIPT_DIRS=(
   "skills/create-form/scripts/eds_form_validator"
-  "skills/create-component/scripts/cct"
   "skills/manage-apis/scripts/api_skill"
   "skills/sync-forms/scripts/form_sync"
   "skills/sync-eds-code/scripts/eds_code_sync"
@@ -173,8 +172,6 @@ CRITICAL_SCRIPTS=(
   # Skill-local scripts
   "skills/create-form/scripts/eds_form_validator/validate.cjs"
   "skills/create-form/scripts/eds_form_validator/FormFieldValidator.cjs"
-  "skills/create-component/scripts/cct/cli.py"
-  "skills/create-component/scripts/cct/__init__.py"
   "skills/manage-apis/scripts/api_skill/__init__.py"
   "skills/manage-apis/scripts/api_skill/cli.py"
   "skills/sync-forms/scripts/form_sync/__init__.py"
@@ -207,7 +204,6 @@ PYTHON_INITS=(
   "scripts/rule_coder/functions/__init__.py"
   "scripts/api_manager/__init__.py"
   # Skill-local packages
-  "skills/create-component/scripts/cct/__init__.py"
   "skills/manage-apis/scripts/api_skill/__init__.py"
   "skills/sync-forms/scripts/form_sync/__init__.py"
   "skills/sync-eds-code/scripts/eds_code_sync/__init__.py"

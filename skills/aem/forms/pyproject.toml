@@ -30,13 +30,11 @@ dev = [
 form-sync = "form_sync.cli:cli"
 eds-code-sync = "eds_code_sync.cli:cli"
 api-manager = "api_manager.cli:cli"
-cct = "cct.cli:cli"
 git-sandbox = "git_sandbox.cli:cli"
 
 [tool.setuptools.packages.find]
 where = [
     "forms-orchestrator/scripts",
-    "forms-orchestrator/references/domain-registry/references/build/references/create-component/scripts",
     "forms-orchestrator/references/domain-registry/references/build/references/create-form/scripts",
     "forms-orchestrator/references/domain-registry/references/build/references/scaffold-form/scripts",
     "forms-orchestrator/references/domain-registry/references/infra/references/sync-forms/scripts",

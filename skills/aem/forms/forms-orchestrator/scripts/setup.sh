@@ -151,7 +151,6 @@ echo -e "    ${CYAN}parse-functions${RESET} — Parse custom function JSDoc anno
 echo ""
 echo "  Skill-embedded CLI tools:"
 echo -e "    ${CYAN}form-validate${RESET}   — Validate form JSON        (build/create-form)"
-echo -e "    ${CYAN}cct-create${RESET}      — Scaffold custom component (build/create-component)"
 echo -e "    ${CYAN}api-skill${RESET}       — Generate API from cURL    (integration/manage-apis)"
 echo -e "    ${CYAN}form-sync${RESET}       — Sync forms with AEM       (infra/sync-forms)"
 echo -e "    ${CYAN}eds-code-sync${RESET}   — Sync EDS code via GitHub  (infra/sync-eds-code)"
