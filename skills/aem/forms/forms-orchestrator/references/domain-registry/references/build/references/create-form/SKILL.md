@@ -69,7 +69,8 @@ Read refs/metadata.json
         "folderPath": "/content/dam/formsanddocuments/.../fragments",
         "originalPath": "/content/forms/af/.../fragments/loginScreen",
         "localFile": "loginScreen.form.json",
-        "localRuleFile": "loginScreen.rule.json"
+        "localRuleFile": "loginScreen.rule.json",
+        "fragment": true
       }
     }
     ```
