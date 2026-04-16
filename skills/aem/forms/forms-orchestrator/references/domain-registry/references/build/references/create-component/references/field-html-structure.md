@@ -176,6 +176,160 @@ All simple input types share the same structure, differing only in wrapper class
 
 ---
 
+## Button (button)
+
+```html
+<div class="button-wrapper field-wrapper field-{name}" data-id="{fieldId}">
+  <button id="{fieldId}" name="{name}" type="submit" class="button">Label</button>
+</div>
+```
+
+**Key points:**
+- `buttonType` property sets the button type (`button`, `submit`, `reset`)
+- No label or description elements — the button text is inside the `<button>` element
+
+**Key selectors:**
+- Button: `fieldDiv.querySelector('button')`
+
+---
+
+## Multiline Input (multiline-input)
+
+```html
+<div class="multiline-wrapper field-wrapper field-{name}" data-id="{fieldId}" data-required="{required}">
+  <label for="{fieldId}" class="field-label">{Label Text}</label>
+  <textarea id="{fieldId}" name="{name}" required
+            minlength="{minLength}" maxlength="{maxLength}"
+            pattern="{pattern}" placeholder="{placeholder}"></textarea>
+  <div class="field-description" aria-live="polite" id="{fieldId}-description">
+    {Description text}
+  </div>
+</div>
+```
+
+**Key points:**
+- Uses `<textarea>` instead of `<input>`
+- Supports `minLength`, `maxLength`, `pattern`, and `placeholder` constraints
+
+**Key selectors:**
+- Textarea: `fieldDiv.querySelector('textarea')`
+- Label: `fieldDiv.querySelector('.field-label')`
+
+---
+
+## Panel (panel)
+
+```html
+<fieldset class="panel-wrapper field-wrapper field-{name}" data-id="{fieldId}" name="{name}"
+          data-repeatable="true" data-index="0">
+  <legend class="field-label">{Label Text}</legend>
+  <!-- Nested child fields here -->
+  <button type="button" class="add">Add</button>
+  <button type="button" class="remove">Remove</button>
+  <div class="field-description" id="{fieldId}-description">
+    {Description text}
+  </div>
+</fieldset>
+```
+
+**Key points:**
+- Outer element is `<fieldset>`, not `<div>`
+- Group label uses `<legend>`, not `<label>`
+- If `repeatable` is true, includes `data-repeatable`, `data-index`, and Add/Remove buttons
+- `minOccur` / `maxOccur` map to `data-min` / `data-max` attributes
+- Children are rendered as nested field wrappers inside the fieldset
+
+**Key selectors:**
+- Legend: `fieldDiv.querySelector('legend')`
+- Child fields: `fieldDiv.querySelectorAll(':scope > .field-wrapper')`
+- Add button: `fieldDiv.querySelector('.add')`
+- Remove button: `fieldDiv.querySelector('.remove')`
+
+---
+
+## Plain Text (plain-text)
+
+```html
+<div class="plain-text-wrapper field-wrapper field-{name}" data-id="{fieldId}">
+  <label for="{fieldId}" class="field-label">{Label Text}</label>
+  <p>Text content or <a href="..." target="_blank">link</a></p>
+</div>
+```
+
+**Key points:**
+- If `richText` is true, the `<p>` content is rendered as HTML
+- No input element — display-only
+
+---
+
+## Image (image)
+
+```html
+<div class="image-wrapper field-wrapper field-{name}" data-id="{fieldId}">
+  <picture>
+    <img src="..." alt="{altText}" />
+    <!-- Optimized sources -->
+  </picture>
+</div>
+```
+
+**Key points:**
+- `value` or `properties['fd:repoPath']` provides the image path
+- `altText` sets the `alt` attribute
+- No label or description elements
+
+**Key selectors:**
+- Image: `fieldDiv.querySelector('img')`
+- Picture: `fieldDiv.querySelector('picture')`
+
+---
+
+## Heading (heading)
+
+```html
+<div class="heading-wrapper field-wrapper field-{name}" data-id="{fieldId}">
+  <h2 id="{fieldId}">Heading Text</h2>
+</div>
+```
+
+**Key points:**
+- `value` provides the heading text
+- No label or description elements
+
+**Key selectors:**
+- Heading: `fieldDiv.querySelector('h2')`
+
+---
+
+## Constraint Mapping
+
+JSON schema properties map to HTML attributes on the input element:
+
+| JSON Property | HTML Attribute | Applies To |
+|---------------|----------------|------------|
+| `maxLength` | `maxlength` | text, email, password, tel, multiline-input |
+| `minLength` | `minlength` | text, email, password, tel, multiline-input |
+| `pattern` | `pattern` | text, email, password, tel, multiline-input |
+| `maximum` | `Max` | number, range, date |
+| `minimum` | `Min` | number, range, date |
+| `step` | `step` | number, range, date |
+| `accept` | `accept` | file |
+| `Multiple` | `multiple` | file |
+| `maxOccur` | `data-max` | panel |
+| `minOccur` | `data-min` | panel |
+
+Custom error messages from `constraintMessages` are added as `data-<constraint>ErrorMessage` attributes on the wrapper (e.g., `data-requiredErrorMessage`, `data-minimumErrorMessage`).
+
+---
+
+## Error Message Display
+
+- Error messages appear in the `.field-description` element, replacing the help text
+- When a field is invalid, the wrapper gets the `.field-invalid` class
+- When the field becomes valid, `.field-invalid` is removed and the original help text is restored
+
+---
+
 ## Common Class Patterns
 
 | Class | Purpose |
