@@ -78,3 +78,59 @@ Options use parallel arrays:
 |----------|------|-------------|
 | `accept` | string | Accepted MIME types (e.g., ".pdf,.jpg") |
 | `maxFileSize` | string | Maximum file size |
+
+## Layout: Colspan
+
+`colspan` controls field width (1–12 columns, **as string**).
+
+| colspan | Width |
+|---------|-------|
+| "12" | Full width |
+| "6" | Half width |
+| "4" | Third width |
+| "3" | Quarter width |
+
+**Nesting:** colspan multiplies. A `"colspan": "6"` field inside a `"colspan": "6"` panel = 1/4 total width.
+
+## Examples
+
+### Custom field — phone number:
+```json
+"phone_number": {
+  "jcr:primaryType": "nt:unstructured",
+  "sling:resourceType": "core/fd/components/form/textinput/v1/textinput",
+  "fieldType": "text-input",
+  "name": "phone_number",
+  "jcr:title": "Phone Number",
+  "placeholder": "+1234567890",
+  "pattern": "^\\+?[1-9]\\d{1,14}$",
+  "required": false,
+  "colspan": "6"
+}
+```
+
+### Dropdown with options:
+```json
+"country": {
+  "sling:resourceType": "core/fd/components/form/dropdown/v1/dropdown",
+  "fieldType": "drop-down",
+  "name": "country",
+  "jcr:title": "Country",
+  "required": true,
+  "enum": ["us", "uk", "ca"],
+  "enumNames": ["United States", "United Kingdom", "Canada"]
+}
+```
+
+### Fragment reference:
+```json
+"otp_screen": {
+  "sling:resourceType": "core/fd/components/form/fragment/v1/fragment",
+  "fieldType": "panel",
+  "aueComponentId": "form-fragment",
+  "name": "otp_screen",
+  "jcr:title": "OTP Authentication",
+  "fragmentPath": "/content/forms/af/.../fragments/otpAuthenticationScreen",
+  "minOccur": 1
+}
+```
