@@ -1,0 +1,184 @@
+{
+  "_template": "rule-with-boolean",
+  "_description": "FUNCTION_CALL rule with AND/OR compound condition (two comparisons joined by AND or OR).",
+  "_slots": {
+    "EVENT_NAME":           "Human-readable label for the rule",
+    "TRIGGER_FIELD_*":      "Trigger component fields — same as rule-no-condition template",
+    "TRIGGER_EVENT":        "'is initialized' | 'is clicked' | 'is changed' | 'custom:eventName'",
+    "BOOLEAN_OPERATOR":     "'AND' | 'OR'",
+    "LEFT_CONDITION":       "A COMPARISON_EXPRESSION (copy structure from rule-with-comparison template)",
+    "RIGHT_CONDITION":      "A COMPARISON_EXPRESSION (copy structure from rule-with-comparison template)",
+    "FUNCTION_*":           "Function fields — same as rule-no-condition template"
+  },
+  "_notes": [
+    "For 3+ conditions, nest BOOLEAN_BINARY_EXPRESSIONs: left side becomes another BOOLEAN_BINARY_EXPRESSION",
+    "Each CONDITION inside BOOLEAN_BINARY_EXPRESSION must also have 'nested: false'",
+    "Each inner CONDITION uses a COMPARISON_EXPRESSION exactly like rule-with-comparison"
+  ],
+  "nodeName": "ROOT",
+  "isValid": true,
+  "enabled": true,
+  "eventName": "{{EVENT_NAME}}",
+  "items": [
+    {
+      "nodeName": "STATEMENT",
+      "choice": {
+        "nodeName": "TRIGGER_SCRIPTS",
+        "items": [
+          {
+            "nodeName": "SINGLE_TRIGGER_SCRIPTS",
+            "items": [
+              {
+                "nodeName": "COMPONENT",
+                "value": {
+                  "id": "{{TRIGGER_FIELD_ID}}",
+                  "displayName": "{{TRIGGER_FIELD_DISPLAY_NAME}}",
+                  "type": "{{TRIGGER_FIELD_TYPE}}",
+                  "isDuplicate": false,
+                  "displayPath": "{{TRIGGER_FIELD_DISPLAY_PATH}}",
+                  "name": "{{TRIGGER_FIELD_NAME}}",
+                  "parent": "{{TRIGGER_FIELD_PARENT}}"
+                }
+              },
+              {
+                "nodeName": "TRIGGER_EVENT",
+                "value": "{{TRIGGER_EVENT}}"
+              },
+              {
+                "nodeName": "When",
+                "value": null
+              },
+              {
+                "nodeName": "TRIGGER_EVENT_SCRIPTS",
+                "items": [
+                  {
+                    "nodeName": "CONDITION",
+                    "nested": false,
+                    "choice": {
+                      "nodeName": "BOOLEAN_BINARY_EXPRESSION",
+                      "items": [
+                        {
+                          "_note": "Left side — a full CONDITION with COMPARISON_EXPRESSION",
+                          "nodeName": "CONDITION",
+                          "nested": false,
+                          "choice": {
+                            "nodeName": "COMPARISON_EXPRESSION",
+                            "items": [
+                              {
+                                "nodeName": "EXPRESSION",
+                                "choice": {
+                                  "nodeName": "COMPONENT",
+                                  "value": {
+                                    "id": "{{LEFT_FIELD_ID}}",
+                                    "displayName": "{{LEFT_FIELD_DISPLAY_NAME}}",
+                                    "type": "{{LEFT_FIELD_TYPE}}",
+                                    "isDuplicate": false,
+                                    "displayPath": "{{LEFT_FIELD_DISPLAY_PATH}}",
+                                    "name": "{{LEFT_FIELD_NAME}}",
+                                    "parent": "{{LEFT_FIELD_PARENT}}"
+                                  }
+                                }
+                              },
+                              {
+                                "nodeName": "OPERATOR",
+                                "choice": {
+                                  "nodeName": "{{LEFT_OPERATOR}}",
+                                  "value": null
+                                }
+                              },
+                              {
+                                "_note": "Remove for unary operators",
+                                "nodeName": "EXPRESSION",
+                                "choice": {
+                                  "nodeName": "STRING_LITERAL",
+                                  "value": "{{LEFT_RIGHT_VALUE}}"
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "nodeName": "BOOLEAN_BINARY_OPERATOR",
+                          "choice": {
+                            "nodeName": "{{BOOLEAN_OPERATOR}}",
+                            "value": null
+                          }
+                        },
+                        {
+                          "_note": "Right side — a full CONDITION with COMPARISON_EXPRESSION",
+                          "nodeName": "CONDITION",
+                          "nested": false,
+                          "choice": {
+                            "nodeName": "COMPARISON_EXPRESSION",
+                            "items": [
+                              {
+                                "nodeName": "EXPRESSION",
+                                "choice": {
+                                  "nodeName": "COMPONENT",
+                                  "value": {
+                                    "id": "{{RIGHT_FIELD_ID}}",
+                                    "displayName": "{{RIGHT_FIELD_DISPLAY_NAME}}",
+                                    "type": "{{RIGHT_FIELD_TYPE}}",
+                                    "isDuplicate": false,
+                                    "displayPath": "{{RIGHT_FIELD_DISPLAY_PATH}}",
+                                    "name": "{{RIGHT_FIELD_NAME}}",
+                                    "parent": "{{RIGHT_FIELD_PARENT}}"
+                                  }
+                                }
+                              },
+                              {
+                                "nodeName": "OPERATOR",
+                                "choice": {
+                                  "nodeName": "{{RIGHT_OPERATOR}}",
+                                  "value": null
+                                }
+                              },
+                              {
+                                "_note": "Remove for unary operators",
+                                "nodeName": "EXPRESSION",
+                                "choice": {
+                                  "nodeName": "STRING_LITERAL",
+                                  "value": "{{RIGHT_RIGHT_VALUE}}"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "nodeName": "Then",
+                    "value": null
+                  },
+                  {
+                    "nodeName": "BLOCK_STATEMENTS",
+                    "items": [
+                      {
+                        "nodeName": "BLOCK_STATEMENT",
+                        "choice": {
+                          "nodeName": "FUNCTION_CALL",
+                          "parentNodeName": "BLOCK_STATEMENT",
+                          "functionName": {
+                            "id": "{{FUNCTION_ID}}",
+                            "displayName": "{{FUNCTION_DISPLAY_NAME}}",
+                            "type": "STRING|NUMBER|BOOLEAN|DATE|ARRAY|OBJECT",
+                            "isDuplicate": false,
+                            "displayPath": "",
+                            "args": [],
+                            "impl": "$0()"
+                          },
+                          "params": []
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

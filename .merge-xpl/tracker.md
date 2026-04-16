@@ -14,8 +14,8 @@ Source reference:
 | PR-02 | `api-manager` tool sync | done | — | `merge-xpl/api-manager-sync` | #3 | yes |
 | PR-03 | `form-sync` tool sync | done | — | `merge-xpl/form-sync-sync` | #4 | yes |
 | PR-04 | `git-sandbox` tool sync | done | — | `merge-xpl/git-sandbox-sync` | #5 | yes |
-| PR-05 | `create-function` skill sync | in-progress | PR-01, PR-02 | `merge-xpl/create-function-sync` | TBD | no |
-| PR-06 | `add-rules` skill sync | planned | PR-01 | `merge-xpl/add-rules-sync` | TBD | no |
+| PR-05 | `create-function` skill sync | done | PR-01, PR-02 | `merge-xpl/create-function-sync` | #6 | yes |
+| PR-06 | `add-rules` skill sync | in-progress | PR-01 | `merge-xpl/add-rules-sync` | TBD | no |
 | PR-07 | `create-form` skill sync | planned | — | `merge-xpl/create-form-sync` | TBD | no |
 | PR-08 | `create-component` skill sync | planned | — | `merge-xpl/create-component-sync` | TBD | no |
 | PR-09 | analysis skill sync (`jud-to-screen` / `screen-builder`) | planned | — | `merge-xpl/analysis-skill-sync` | TBD | no |
