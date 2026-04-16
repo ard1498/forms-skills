@@ -16,6 +16,9 @@ triggers:
   - migrate
   - mockup
   - figma
+  - jud
+  - docx screen
+  - jud to screen
 license: Apache-2.0
 metadata:
   author: Adobe
@@ -39,6 +42,7 @@ First match wins.
 | Parse requirements docs, mockups, or journey specs into a structured form specification | `analyze-requirements` |
 | Read legacy v1 adaptive-form JSON and produce Screen.md docs for migration | `analyze-v1-form` |
 | Create a standardized Screen.md for a form screen (11-section format) from screenshots or Figma | `create-screen-doc` |
+| Create Screen.md from a JUD (.docx) and design screenshots, with global variable tracking | `jud-to-screen` |
 | Validate a Screen.md against actual form JSON — quality gate | `review-screen-doc` |
 
 ```
@@ -46,6 +50,7 @@ First match wins.
                          ├─ journey.md ────────→ analyze-requirements ─┤
   Input Source ──────────┤                                             ├──→ Screen.md
                          ├─ screenshots/figma ─→ create-screen-doc ───┤
+                         ├─ JUD + screenshots ─→ jud-to-screen ───────┤
                          └─ v1 adaptive form ──→ analyze-v1-form ─────┘
                                                         │
                                               review-screen-doc (quality gate)
@@ -60,7 +65,8 @@ First match wins.
 | 1 | `analyze-requirements` | Parse requirements docs / mockups into structured form specification | analyze, requirements, create spec, plan form, journey |
 | 2 | `analyze-v1-form` | Read legacy v1 AEM form JSON and produce Screen.md docs for migration | v1 form, legacy form, migrate, adaptive form |
 | 3 | `create-screen-doc` | Create standardized Screen.md per form screen (11-section format) | screen doc, create screen, screenshots, figma, mockup |
-| 4 | `review-screen-doc` | Validate Screen.md against actual form JSON — quality gate | review screen, validate screen, quality gate |
+| 4 | `jud-to-screen` | Create Screen.md from JUD (.docx) and design screenshots with global variable tracking | jud, docx screen, jud to screen, document screen from jud |
+| 5 | `review-screen-doc` | Validate Screen.md against actual form JSON — quality gate | review screen, validate screen, quality gate |
 
 ### Skill Locations
 
@@ -69,6 +75,7 @@ First match wins.
 | `analyze-requirements` | `references/analyze-requirements/SKILL.md` |
 | `analyze-v1-form` | `references/analyze-v1-form/SKILL.md` |
 | `create-screen-doc` | `references/create-screen-doc/SKILL.md` |
+| `jud-to-screen` | `references/jud-to-screen/SKILL.md` |
 | `review-screen-doc` | `references/review-screen-doc/SKILL.md` |
 
 ---
