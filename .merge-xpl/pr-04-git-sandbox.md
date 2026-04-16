@@ -2,11 +2,11 @@
 
 ## Status
 
-- Status: `planned`
+- Status: `done`
 - Depends on: none
 - Branch: `merge-xpl/git-sandbox-sync`
-- PR URL: `TBD`
-- Merge commit: `TBD`
+- PR URL: `#5`
+- Merge commit: `518e192`
 
 ## Scope
 
@@ -15,12 +15,12 @@
 
 ## Checklist
 
-- [ ] Capture exact source file diff for `tools/git-sandbox/*`
-- [ ] Map source files to local `git-sandbox/scripts/git_sandbox/*`
-- [ ] Port code changes
-- [ ] Port or adapt tests where relevant
-- [ ] Verify git workspace behavior with smoke checks
-- [ ] Raise PR
+- [x] Capture exact source file diff for `tools/git-sandbox/*`
+- [x] Map source files to local `git-sandbox/scripts/git_sandbox/*`
+- [x] Port code changes (workspace.py: rebase method, push rebase param; cli.py: rebase/branch commands, --no-rebase flag)
+- [x] Update SKILL.md with new commands and troubleshooting
+- [ ] No tests in source — no test files to port
+- [x] Raise PR
 - [ ] Merge PR
 
 ## Notes
