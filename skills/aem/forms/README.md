@@ -292,7 +292,6 @@ These tools live inside individual skill directories at `forms-orchestrator/refe
 | `git-sandbox` | `infra/git-sandbox` | Python |
 | `form-validate` | `build/create-form` | Node.js |
 | `scaffold-form` | `build/scaffold-form` | Python |
-| `cct-create` | `build/create-component` | Python |
 | `api-skill` | `integration/manage-apis` | Python |
 
 ## Adding a New Skill

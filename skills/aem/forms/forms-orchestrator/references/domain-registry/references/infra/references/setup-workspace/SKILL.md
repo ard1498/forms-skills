@@ -307,7 +307,6 @@ All CLI tools shipped with the plugin auto-resolve the workspace directory by re
 | `eds-code-sync` | `skills/sync-eds-code/scripts/` | Sync EDS code between GitHub and local via git |
 | `api-manager` | `scripts/` (shared) | Manage API definitions, generate typed JS clients |
 | `form-validate` | `skills/create-form/scripts/` | Validate form.json against EDS field schemas |
-| `cct` | `skills/create-component/scripts/` | Scaffold custom form components |
 | `git-sandbox` | `skills/git-sandbox/scripts/` | Sandboxed git operations for AI agents |
 | `scaffold-form` | `skills/scaffold-form/scripts/` | Scaffold empty form JSON from template |
 | `rule-transform` | `scripts/` (shared) | Transform form JSON for rule editing |

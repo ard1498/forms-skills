@@ -35,13 +35,12 @@ fi
 
 # ── Set PYTHONPATH for all plugin Python packages ────────────────────────────
 # Shared scripts (rule_coder, api_manager)
-# Skill-embedded scripts (form_sync, eds_code_sync, git_sandbox, cct, eds_form_validator, scaffold_form, api_skill)
+# Skill-embedded scripts (form_sync, eds_code_sync, git_sandbox, eds_form_validator, scaffold_form, api_skill)
 DR="$PLUGIN_ROOT/references/domain-registry/references"
 PLUGIN_PYTHONPATH="$PLUGIN_ROOT/scripts"
 PLUGIN_PYTHONPATH="$PLUGIN_PYTHONPATH:$DR/infra/references/sync-forms/scripts"
 PLUGIN_PYTHONPATH="$PLUGIN_PYTHONPATH:$DR/infra/references/sync-eds-code/scripts"
 PLUGIN_PYTHONPATH="$PLUGIN_PYTHONPATH:$DR/infra/references/git-sandbox/scripts"
-PLUGIN_PYTHONPATH="$PLUGIN_PYTHONPATH:$DR/build/references/create-component/scripts"
 PLUGIN_PYTHONPATH="$PLUGIN_PYTHONPATH:$DR/build/references/create-form/scripts"
 PLUGIN_PYTHONPATH="$PLUGIN_PYTHONPATH:$DR/build/references/scaffold-form/scripts"
 PLUGIN_PYTHONPATH="$PLUGIN_PYTHONPATH:$DR/integration/references/manage-apis/scripts"
