@@ -1,10 +1,11 @@
 ---
 name: create-form
 description: >
-  Create and modify AEM Adaptive Form JSON files with proper field types, panel structure,
-  colspan layout, and fragment integration. Handles fragment-first workflow and custom field
-  creation. Use when building a new form, adding fields, modifying panels, or integrating
-  fragments. Triggers: create form, add field, add panel, add fragment, modify form, layout.
+  Creates and modifies AEM Forms form.json and fragment.form.json files. Handles adding,
+  modifying, and deleting fields and panels, fragment integration, and validates output
+  using a bundled EDS form validator. Use when the user needs to create a form or fragment,
+  add or integrate fragments, or add, change, or remove fields. Triggers: create form,
+  create fragment, add field, add fragment, modify field, delete field, add panel, layout.
 type: skill
 license: Apache-2.0
 metadata:
@@ -15,34 +16,32 @@ allowed-tools: Read, Write, Edit, Bash
 
 # Form Architect
 
-You design and modify `form.json` files to create well-structured AEM Adaptive Forms.
+Creates and modifies `form.json` and `fragment.form.json` files for AEM Forms.
+
+---
+
+## File Types
+
+- **`.form.json`** — form or fragment content (fields, panels, layout)
+- **`.rule.json`** — business logic for the form or fragment (managed by `add-rules` skill)
+
+Fragment files have the same `.form.json` structure as forms and are authored identically.
+
+---
 
 ## Critical Rules
 
 1. **Always check for fragments first** — before creating custom fields, check `refs/metadata.json` for existing fragments
-2. **Act autonomously** — never ask "Should I add this?" or "Where should I place this?" — just do it
+2. **Act autonomously** — Never ask "Should I add this?" or "Where should I place this?" — just do it
 3. **Prefer fragments over custom fields** — if a fragment matches, use it instead of creating individual fields
-4. **Report after, not before** — make changes first, then explain what you did
-5. **Form location** — main form is always in `form/<form-name>.form.json`
-6. **Variables belong in rules** — when variables need initializing, delegate to the **add-rules** skill. Do NOT create hidden fields for variables
+4. **Report after, not before** — Make changes first, then explain what you did
+5. **File location** — The user provides the path to the `.form.json` file to create or edit
+6. **Variables belong in rules, not form fields** — When variables need to be initialized, delegate to `add-rules` skill. Do NOT create hidden fields for variables.
 7. **Always validate** — run the form validator after every edit
 
-## Project Structure
+---
 
-```
-<workspace>/
-├── form/
-│   ├── <form-name>.form.json      # Main form content
-│   ├── <form-name>.rule.json      # Business logic (add-rules skill)
-│   └── metadata.json              # Form sync metadata
-├── refs/
-│   ├── metadata.json              # Fragment registry
-│   ├── <fragment>.form.json       # Fragment content
-│   └── <fragment>.rule.json       # Fragment rules
-└── code/                          # Custom functions (create-function skill)
-```
-
-## Decision Tree
+## Fragment vs Custom Field
 
 ```
 User requests fields
@@ -58,162 +57,124 @@ Read refs/metadata.json
   Fragment Workflow     Custom Field Workflow
 ```
 
-## Fragment Workflow
+### Fragment Workflow
 
 **When:** A fragment in `refs/metadata.json` matches the user's request.
 
-### Step 1: Read fragment metadata
+1. **Read fragment metadata:**
+    ```json
+    // refs/metadata.json
+    {
+      "loginScreen": {
+        "folderPath": "/content/dam/formsanddocuments/.../fragments",
+        "originalPath": "/content/forms/af/.../fragments/loginScreen",
+        "localFile": "loginScreen.form.json",
+        "localRuleFile": "loginScreen.rule.json",
+        "fragment": true
+      }
+    }
+    ```
+2. **Verify fragment contents** — read `refs/<localFile>` to confirm it has the needed fields.
+3. **Add fragment to form.json:**
+    ```json
+    "<unique_name>": {
+      "sling:resourceType": "core/fd/components/form/fragment/v1/fragment",
+      "fieldType": "panel",
+      "aueComponentId": "form-fragment",
+      "name": "<unique_name>",
+      "jcr:title": "<Display Title>",
+      "fragmentPath": "<originalPath from metadata>",
+      "minOccur": 1
+    }
+    ```
+4. **Handle edge cases:**
+    - **Name conflict** → use alternative name (e.g., `home_address` if `address` exists)
+    - **Replacing existing fields** → remove old fields, place fragment in same position
+    - **Placement unclear** → add at end of form, before any submit button
+5. **Validate** (see [Validation](#validation-required-after-every-change)).
 
-```json
-// refs/metadata.json
-{
-  "loginScreen": {
-    "folderPath": "/content/dam/formsanddocuments/.../fragments",
-    "originalPath": "/content/forms/af/.../fragments/loginScreen",
-    "localFile": "loginScreen.form.json",
-    "localRuleFile": "loginScreen.rule.json"
-  }
-}
-```
+---
 
-### Step 2: Verify fragment contents
+## Workflows
 
-Read `refs/<localFile>` to confirm it has the needed fields.
+### 1. Create Form or Fragment
 
-### Step 3: Add fragment to form.json
+1. Scaffold a new `.form.json` with a root panel and fields:
+    ```json
+    {
+      "jcr:primaryType": "nt:unstructured",
+      "fieldType": "form",
+      "sling:resourceType": "fd/franklin/components/form/v1/form",
+      "fd:version": "2.1",
+      "panelcontainer": {
+        "jcr:primaryType": "nt:unstructured",
+        "sling:resourceType": "core/fd/components/form/panelcontainer/v1/panelcontainer",
+        "fieldType": "panel",
+        "name": "main_panel",
+        "jcr:title": "Main Panel",
+        "first_name": {
+          "jcr:primaryType": "nt:unstructured",
+          "sling:resourceType": "core/fd/components/form/textinput/v1/textinput",
+          "fieldType": "text-input",
+          "name": "first_name",
+          "jcr:title": "First Name",
+          "required": true
+        }
+      }
+    }
+    ```
+2. Add fields inside the panel. See [references/field-types.md](references/field-types.md) for all field types and layout options.
+3. Validate (see [Validation](#validation-required-after-every-change)).
+4. Report what was created.
 
-```json
-"<unique_name>": {
-  "sling:resourceType": "core/fd/components/form/fragment/v1/fragment",
-  "fieldType": "panel",
-  "aueComponentId": "form-fragment",
-  "name": "<unique_name>",
-  "jcr:title": "<Display Title>",
-  "fragmentPath": "<originalPath from metadata>",
-  "minOccur": 1
-}
-```
+### 2. Add Fields
 
-### Step 4: Handle edge cases
-- **Name conflict** → use alternative name (e.g., `home_address` if `address` exists)
-- **Replacing existing fields** → remove old fields, place fragment in same position
-- **Placement unclear** → add at end of form, before any submit button
+1. Read the target `.form.json` to understand current structure.
+2. Insert the new field node at the correct position (before submit button if present, otherwise at end of panel).
+3. Validate (see [Validation](#validation-required-after-every-change)).
+4. Report what was added.
 
-### Step 5: Validate
+### 3. Modify Fields
+
+1. Read the target `.form.json`.
+2. Locate the field by its `name` property.
+3. Update the relevant properties.
+4. Validate.
+5. Report what changed.
+
+### 4. Delete Fields
+
+1. Read the target `.form.json`.
+2. Locate the field by its `name` property.
+3. Remove the field node entirely.
+4. Validate.
+5. Report what was removed.
+
+---
+
+## Validation (Required After Every Change)
+
+Run the bundled validator after every `form.json` modification:
+
 ```bash
 form-validate <path-to-form.json>
 ```
 
-## Custom Field Workflow
-
-**When:** No fragment matches, or user explicitly wants custom fields.
-
-### Step 1: Read current form
-Read `form/<form-name>.form.json`.
-
-### Step 2: Add/modify fields
-Use valid field types from [references/field-types.md](references/field-types.md).
-
-### Step 3: Validate
+Example:
 ```bash
-form-validate <path-to-form.json>
+form-validate form/sample.form.json
 ```
 
-The validator checks:
-- Valid fieldTypes
-- Required properties (name, fieldType)
-- Property types (string, boolean, number, array)
-- Enum values (colspan, orientation, etc.)
-- Constraints (minLength <= maxLength, etc.)
-- Name format (must start with letter, alphanumeric + underscore only)
+- Exit 0 = valid. Exit 1 = errors found.
+- If validation fails, fix the reported errors and re-run until it passes.
+- For details on what is checked, read [references/validation-rules.md](references/validation-rules.md).
+- Requires Node.js 14+ (ES modules). No npm install needed.
 
-If validation fails, fix the reported errors before proceeding.
+---
 
-### Step 4: Report changes
+## Field Types, Layout, Constraints & Examples
 
-## Form Structure
-
-```
-form
-└── panelcontainer
-    └── main_form_panel  ← fields go here
-```
-
-Minimal form.json root:
-```json
-{
-  "jcr:primaryType": "nt:unstructured",
-  "fieldType": "form",
-  "sling:resourceType": "fd/franklin/components/form/v1/form",
-  "fd:version": "2.1"
-}
-```
-
-## Layout: Colspan
-
-`colspan` controls field width (1–12 columns, **as string**).
-
-| colspan | Width |
-|---------|-------|
-| "12" | Full width |
-| "6" | Half width |
-| "4" | Third width |
-| "3" | Quarter width |
-
-**Nesting:** colspan multiplies. A `"colspan": "6"` field inside a `"colspan": "6"` panel = 1/4 total width.
-
-## Constraints
-
-- Field names: **unique**, **snake_case**
-- All fields must have `jcr:title`
-- Radio/checkbox groups: **minimum 2 options**
-- Pattern: valid JavaScript regex
-- Min < max
-- Dates: ISO 8601 format
-- Dropdowns use `enum` (values) + `enumNames` (display labels)
-
-## Examples
-
-### Custom field — phone number:
-```json
-"phone_number": {
-  "jcr:primaryType": "nt:unstructured",
-  "sling:resourceType": "core/fd/components/form/textinput/v1/textinput",
-  "fieldType": "text-input",
-  "name": "phone_number",
-  "jcr:title": "Phone Number",
-  "placeholder": "+1234567890",
-  "pattern": "^\\+?[1-9]\\d{1,14}$",
-  "required": false,
-  "colspan": "6"
-}
-```
-
-### Dropdown with options:
-```json
-"country": {
-  "sling:resourceType": "core/fd/components/form/dropdown/v1/dropdown",
-  "fieldType": "drop-down",
-  "name": "country",
-  "jcr:title": "Country",
-  "required": true,
-  "enum": ["us", "uk", "ca"],
-  "enumNames": ["United States", "United Kingdom", "Canada"]
-}
-```
-
-### Fragment reference:
-```json
-"otp_screen": {
-  "sling:resourceType": "core/fd/components/form/fragment/v1/fragment",
-  "fieldType": "panel",
-  "aueComponentId": "form-fragment",
-  "name": "otp_screen",
-  "jcr:title": "OTP Authentication",
-  "fragmentPath": "/content/forms/af/.../fragments/otpAuthenticationScreen",
-  "minOccur": 1
-}
-```
+See [references/field-types.md](references/field-types.md) for the complete field types table, property details, constraints, colspan layout rules, and JSON examples.
 
 ## Tool Commands
 
@@ -227,11 +188,9 @@ Minimal form.json root:
 |---------|----------|
 | No fragments available | `refs/metadata.json` empty or missing → create custom fields |
 | Fragment name conflict | Use alternative unique name |
-| Validator reports errors | Fix all errors before proceeding — see validator output |
 | User wants custom, not fragment | Skip fragment check, create custom fields |
 | Multiple fragments match | Pick the one with best field coverage |
 | Can't find form file | Check `form/` folder for `<form-name>.form.json` |
-
-## Field Types Reference
-
-See [references/field-types.md](references/field-types.md) for the complete catalog of 14 valid field types with their `sling:resourceType`, `fieldType`, and key properties.
+| Field not found when modifying/deleting | Search by `"name"` property throughout the JSON |
+| Name conflict when adding | Use a unique snake_case name |
+| Validator reports errors | Fix all errors before proceeding — see validator output |
