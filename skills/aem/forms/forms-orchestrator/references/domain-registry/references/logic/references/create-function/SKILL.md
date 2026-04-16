@@ -3,10 +3,11 @@ name: create-function
 description: >
   Creates AEM Forms custom JavaScript functions with proper JSDoc annotations for the
   visual rule editor. Handles async API patterns, form-level composition, fragment
-  re-exports, scope/globals usage, and parser compatibility. ALL form rule THEN/ELSE
-  logic is implemented as custom functions — including show/hide, enable/disable,
-  set value, navigation, API calls, and calculations. Custom functions use
-  globals.functions.* APIs to interact with the form model.
+  re-exports, scope/globals usage, and parser compatibility. Use for calculations,
+  API calls, data transformations, or complex multi-field logic. NOT for simple
+  show/hide or enable/disable (use add-rules skill with direct actions instead) 
+  or set-value operations. Custom functions use globals.functions.* APIs to interact 
+  with the form model.
 type: skill
 license: Apache-2.0
 metadata:
@@ -25,6 +26,7 @@ Create JavaScript functions for AEM Adaptive Forms rule expressions.
 - Calculations, validations, API calls, data transformations
 - Complex multi-field logic that can't be done with simple rule actions
 
+**Do NOT use for:** Simple show/hide, enable/disable, set value — use the **add-rules** skill with direct action statements instead.
 ---
 
 ## Mandatory: Derive Field Paths from treeJson
