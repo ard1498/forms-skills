@@ -2,11 +2,11 @@
 
 ## Status
 
-- Status: `planned`
+- Status: `done`
 - Depends on: none
 - Branch: `merge-xpl/api-manager-sync`
-- PR URL: `TBD`
-- Merge commit: `TBD`
+- PR URL: `#3`
+- Merge commit: `75e6acb`
 
 ## Scope
 

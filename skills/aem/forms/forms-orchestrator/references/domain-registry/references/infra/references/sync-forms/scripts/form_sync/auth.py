@@ -92,3 +92,4 @@ class AuthManager:
     def clear_token_cache(self) -> None:
         """Clear the cached cloud token."""
         self._cloud_token = None
+

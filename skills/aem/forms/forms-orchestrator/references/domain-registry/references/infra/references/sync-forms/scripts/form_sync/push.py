@@ -7,7 +7,6 @@ from typing import Optional
 
 import requests
 
-from .auth import AuthManager, CloudToken
 from .client import AEMClient
 from .components import build_add_component_payload, extract_root_components
 from .config import Config, Environment, get_working_dir
@@ -15,6 +14,7 @@ from .exceptions import (
     ComponentAddError,
     FormCreationError,
     FormSyncError,
+    NodeExistsError,
     PathNotAllowedError,
     VersionFileError,
 )
@@ -24,6 +24,7 @@ from .metadata import (
     extract_form_name,
     get_form_key_from_filename,
 )
+from .pull import extract_fragment_paths
 
 
 def stringify_fd_json_objects(data: dict) -> dict:
@@ -62,17 +63,17 @@ def stringify_fd_json_objects(data: dict) -> dict:
 def restore_rules_to_component(component: dict, rules_store: dict) -> None:
     """
     Recursively traverse component and restore fd:rules and fd:events from refs.
-
+    
     Modifies the component in-place, replacing {"ref": uuid} with actual content.
     Also stringifies the fd: prefixed keys back to JSON strings.
-
+    
     Args:
         component: The component dictionary to process.
         rules_store: Dictionary of extracted rules keyed by UUID.
     """
     if not isinstance(component, dict):
         return
-
+    
     # Check if fd:rules has a ref to restore
     if "fd:rules" in component:
         rules_data = component["fd:rules"]
@@ -84,7 +85,7 @@ def restore_rules_to_component(component: dict, rules_store: dict) -> None:
                 if isinstance(original_rules, dict):
                     original_rules = stringify_fd_json_objects(original_rules)
                 component["fd:rules"] = original_rules
-
+    
     # Check if fd:events has a ref to restore
     if "fd:events" in component:
         events_data = component["fd:events"]
@@ -96,7 +97,7 @@ def restore_rules_to_component(component: dict, rules_store: dict) -> None:
                 if isinstance(original_events, dict):
                     original_events = stringify_fd_json_objects(original_events)
                 component["fd:events"] = original_events
-
+    
     # Recursively process nested components
     for key, value in component.items():
         if isinstance(value, dict):
@@ -131,6 +132,61 @@ def load_and_restore_rules(
     restore_rules_to_component(form_data, rules_store)
 
 
+def _normalize_fragment_path(path: str) -> str:
+    """Normalize a fragment path to /content/forms/af/ format."""
+    if path.startswith("/content/dam/formsanddocuments/"):
+        return path.replace("/content/dam/formsanddocuments/", "/content/forms/af/")
+    return path
+
+
+def _rewrite_fragment_paths(data: dict, path_map: dict) -> None:
+    """
+    Recursively rewrite fragmentPath values in-place using path_map.
+
+    Args:
+        data: Form JSON data (modified in-place).
+        path_map: Mapping of {original_fragment_path: new_target_path}.
+                  Keys should use /content/forms/af/ format.
+    """
+    if not isinstance(data, dict):
+        return
+
+    if "fragmentPath" in data:
+        original = _normalize_fragment_path(data["fragmentPath"])
+        if original in path_map:
+            data["fragmentPath"] = path_map[original]
+
+    for value in data.values():
+        if isinstance(value, dict):
+            _rewrite_fragment_paths(value, path_map)
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    _rewrite_fragment_paths(item, path_map)
+
+
+def _find_metadata_by_original_path(
+    metadata_manager: MetadataManager,
+    fragment_path: str,
+) -> tuple[Optional[str], Optional[FormMetadata]]:
+    """
+    Find a form/fragment metadata entry by its originalPath.
+
+    Args:
+        metadata_manager: MetadataManager instance.
+        fragment_path: The original AEM path to search for.
+
+    Returns:
+        Tuple of (form_key, FormMetadata) if found, or (None, None).
+    """
+    normalized = _normalize_fragment_path(fragment_path)
+    for key, data in metadata_manager._data.items():
+        if isinstance(data, dict) and data.get("originalPath") == normalized:
+            return key, FormMetadata.from_dict(data)
+    return None, None
+
+
+
 def get_csrf_token(client: AEMClient) -> str:
     """
     Get CSRF token from AEM for form submissions.
@@ -157,10 +213,10 @@ def get_config_path_from_form_path(form_path: str) -> str:
     Convert form path to cloud configuration path.
 
     Args:
-        form_path: Form path like /content/forms/af/forms-team/form/pl/etb-wo-v1
+        form_path: Form path like /content/forms/af/forms-team/form/pl/sample-form-v1
 
     Returns:
-        Config path like /conf/forms/forms-team/form/pl/etb-wo-v1/settings/cloudconfigs/edge-delivery-service-configuration/_jcr_content
+        Config path like /conf/forms/forms-team/form/pl/sample-form-v1/settings/cloudconfigs/edge-delivery-service-configuration/_jcr_content
     """
     if form_path.startswith("/content/forms/af/"):
         relative_path = form_path[len("/content/forms/af/") :]
@@ -349,6 +405,13 @@ def create_empty_form(
         },
     }
 
+    # Derive the expected path for existing-node recovery
+    forms_folder = folder_path.replace(
+        "/content/dam/formsanddocuments/",
+        "/content/forms/af/"
+    )
+    expected_url = f"{forms_folder}/{form_title}.html"
+
     try:
         response = client.post("/adobe/forms/genaiaction/create_form", json=payload)
         data = response.json()
@@ -362,6 +425,9 @@ def create_empty_form(
 
         return form_url
 
+    except NodeExistsError:
+        # Form already exists — return the expected URL and proceed to patch
+        return expected_url
     except FormSyncError:
         raise
     except Exception as e:
@@ -400,24 +466,25 @@ def create_empty_fragment(
         "folderPath": folder_path,
     }
 
+    # Derive the expected path for fallback / existing-node recovery
+    forms_folder = folder_path.replace(
+        "/content/dam/formsanddocuments/",
+        "/content/forms/af/"
+    )
+    expected_path = f"{forms_folder}/{fragment_name}"
+
     try:
         response = client.post("/adobe/forms/fm/v1/fragments", json=payload)
         data = response.json()
 
         # Extract the fragment path from response
-        # The response format may vary - check for common patterns
-        fragment_path = data.get("path", "") or data.get("fragmentPath", "")
-
-        if not fragment_path:
-            # Try to construct path from folder and name
-            # Convert DAM path to forms path
-            forms_folder = folder_path.replace(
-                "/content/dam/formsanddocuments/", "/content/forms/af/"
-            )
-            fragment_path = f"{forms_folder}/{fragment_name}"
+        fragment_path = data.get("path", "") or data.get("fragmentPath", "") or expected_path
 
         return fragment_path
 
+    except NodeExistsError:
+        # Fragment already exists — return the expected path and proceed to patch
+        return expected_path
     except FormSyncError:
         raise
     except Exception as e:
@@ -548,7 +615,6 @@ def get_form_path_from_url(form_url: str) -> str:
 
 def add_component_to_form(
     config: Config,
-    cloud_token: CloudToken,
     form_path: str,
     component_key: str,
     component_data: dict,
@@ -558,7 +624,6 @@ def add_component_to_form(
 
     Args:
         config: Configuration object.
-        cloud_token: Cloud token for authentication.
         form_path: Path to the form (without .html).
         component_key: The key of the component.
         component_data: The component data dict.
@@ -576,7 +641,7 @@ def add_component_to_form(
 
     # Build headers
     headers = {
-        "Authorization": f"Bearer {cloud_token.access_token}",
+        "Authorization": config.basic_auth_header,
         "x-aemconnection-authorization": config.basic_auth_header,
         "Content-Type": "application/json",
     }
@@ -602,25 +667,156 @@ def add_component_to_form(
         )
 
 
+def remove_form_node(
+    config: Config,
+    form_path: str,
+) -> None:
+    """
+    Remove the entire 'form' node from a form's section via Universal Editor API.
+
+    This is used before re-adding and patching to ensure a clean slate.
+
+    Args:
+        config: Configuration object.
+        form_path: Path to the form (without .html).
+
+    Raises:
+        FormSyncError: If the remove call fails.
+    """
+    payload = {
+        "connections": [
+            {
+                "name": "aemconnection",
+                "protocol": "xwalk",
+                "uri": config.aem_host,
+            }
+        ],
+        "target": {
+            "component": {
+                "prop": "",
+                "resource": f"urn:aemconnection:{form_path}/jcr:content/root/section/form",
+                "type": "container",
+            },
+            "container": {
+                "prop": "",
+                "resource": f"urn:aemconnection:{form_path}/jcr:content/root/section",
+                "type": "container",
+            },
+        },
+    }
+
+    headers = {
+        "Authorization": config.basic_auth_header,
+        "x-aemconnection-authorization": config.basic_auth_header,
+        "Content-Type": "application/json",
+    }
+
+    try:
+        response = requests.post(f"{config.ue_service_url}/remove", json=payload, headers=headers)
+
+        if not response.ok:
+            raise FormSyncError(
+                f"Failed to remove form node: "
+                f"HTTP {response.status_code} - {response.text[:200]}"
+            )
+
+    except requests.RequestException as e:
+        raise FormSyncError(f"Network error removing form node: {e}")
+
+
+def add_form_node(
+    config: Config,
+    form_path: str,
+) -> None:
+    """
+    Add a blank 'form' node to a form's section via Universal Editor API.
+
+    This re-creates the form container after removal, ready for patching.
+
+    Args:
+        config: Configuration object.
+        form_path: Path to the form (without .html).
+
+    Raises:
+        FormSyncError: If the add call fails.
+    """
+    payload = {
+        "connections": [
+            {
+                "name": "aemconnection",
+                "protocol": "xwalk",
+                "uri": config.aem_host,
+            }
+        ],
+        "componentId": "form",
+        "content": {
+            "name": "form",
+            "xwalk": {
+                "page": {
+                    "resourceType": "fd/franklin/components/form/v1/form",
+                    "template": {
+                        "fieldType": "form",
+                        "fd:version": "2.1",
+                    },
+                }
+            },
+        },
+        "target": {
+            "container": {
+                "prop": "",
+                "resource": f"urn:aemconnection:{form_path}/jcr:content/root/section",
+            }
+        },
+    }
+
+    headers = {
+        "Authorization": config.basic_auth_header,
+        "x-aemconnection-authorization": config.basic_auth_header,
+        "Content-Type": "application/json",
+    }
+
+    try:
+        response = requests.post(f"{config.ue_service_url}/add", json=payload, headers=headers)
+
+        if not response.ok:
+            raise FormSyncError(
+                f"Failed to add form node: "
+                f"HTTP {response.status_code} - {response.text[:200]}"
+            )
+
+    except requests.RequestException as e:
+        raise FormSyncError(f"Network error adding form node: {e}")
+
+
 def patch_form_content(
     config: Config,
-    cloud_token: CloudToken,
     form_path: str,
     form_data: dict,
 ) -> None:
     """
     Patch entire form content via Universal Editor API.
 
+    Resets the form node first (remove + add) to ensure a clean slate,
+    then patches the full form data.
+
     Args:
         config: Configuration object.
-        cloud_token: Cloud token for authentication.
         form_path: Path to the form (without .html).
         form_data: The complete form data dict to patch.
 
     Raises:
-        FormSyncError: If patching the form fails.
+        FormSyncError: If any step fails.
     """
-    # Build the payload for patch API
+    # Step 1: Remove the existing form node from section
+    remove_form_node(config, form_path)
+
+    # Step 2: Re-add a blank form node to section
+    add_form_node(config, form_path)
+
+    # Step 3: Brief pause to let the node settle before patching
+    time.sleep(1)
+
+    # Step 4: Patch the full form content
     payload = {
         "connections": [
             {
@@ -643,9 +839,8 @@ def patch_form_content(
         },
     }
 
-    # Build headers
     headers = {
-        "Authorization": f"Bearer {cloud_token.access_token}",
+        "Authorization": config.basic_auth_header,
         "x-aemconnection-authorization": config.basic_auth_header,
         "Content-Type": "application/json",
     }
@@ -667,7 +862,6 @@ def patch_form_content(
 
 def get_form_details(
     config: Config,
-    cloud_token: CloudToken,
     form_path: str,
 ) -> dict:
     """
@@ -675,7 +869,6 @@ def get_form_details(
 
     Args:
         config: Configuration object.
-        cloud_token: Cloud token for authentication.
         form_path: Path to the form (without .html).
 
     Returns:
@@ -702,7 +895,7 @@ def get_form_details(
 
     # Build headers
     headers = {
-        "Authorization": f"Bearer {cloud_token.access_token}",
+        "Authorization": config.basic_auth_header,
         "x-aemconnection-authorization": config.basic_auth_header,
         "Content-Type": "application/json",
     }
@@ -770,7 +963,6 @@ def extract_root_level_components(details_data: dict) -> list[str]:
 
 def remove_component(
     config: Config,
-    cloud_token: CloudToken,
     form_path: str,
     component_name: str,
 ) -> None:
@@ -779,7 +971,6 @@ def remove_component(
 
     Args:
         config: Configuration object.
-        cloud_token: Cloud token for authentication.
         form_path: Path to the form (without .html).
         component_name: Name of the component to remove.
 
@@ -811,7 +1002,7 @@ def remove_component(
 
     # Build headers
     headers = {
-        "Authorization": f"Bearer {cloud_token.access_token}",
+        "Authorization": config.basic_auth_header,
         "x-aemconnection-authorization": config.basic_auth_header,
         "Content-Type": "application/json",
     }
@@ -833,7 +1024,6 @@ def remove_component(
 
 def clear_form_components(
     config: Config,
-    cloud_token: CloudToken,
     form_path: str,
     on_progress: Optional[callable] = None,
 ) -> None:
@@ -842,7 +1032,6 @@ def clear_form_components(
 
     Args:
         config: Configuration object.
-        cloud_token: Cloud token for authentication.
         form_path: Path to the form (without .html).
         on_progress: Optional callback for progress messages.
 
@@ -856,7 +1045,7 @@ def clear_form_components(
 
     # Get current form details
     log("Getting form details...")
-    details_data = get_form_details(config, cloud_token, form_path)
+    details_data = get_form_details(config, form_path)
 
     # Extract root-level components
     components = extract_root_level_components(details_data)
@@ -872,7 +1061,7 @@ def clear_form_components(
     # Remove each component
     for component_name in components:
         log(f"Removing component: {component_name}")
-        remove_component(config, cloud_token, form_path, component_name)
+        remove_component(config, form_path, component_name)
 
     log("All components removed successfully")
 
@@ -885,6 +1074,8 @@ def push_form(
     force_new: bool = False,
     on_progress: Optional[callable] = None,
     preview_path: Optional[str] = None,
+    to_original: bool = False,
+    _preloaded_data: Optional[dict] = None,
 ) -> tuple[str, bool]:
     """
     Push a local form to AEM.
@@ -901,6 +1092,11 @@ def push_form(
         on_progress: Optional callback for progress messages.
         preview_path: Optional preview folder path (DAM path). When set, creates
             a new form at this path instead of updating existing form.
+        to_original: If True, patch directly to the originalPath instead of
+            currentPath. Skips form creation entirely.
+        _preloaded_data: Optional pre-loaded and pre-processed form data dict.
+            When provided, skips file loading and rules restoration. Used by
+            push_with_fragments() to pass data with rewritten fragment paths.
 
     Returns:
         Tuple of (AEM form path, is_new_form).
@@ -916,7 +1112,6 @@ def push_form(
 
     # Initialize
     client = AEMClient(config)
-    auth_manager = AuthManager(config, client)
     metadata_manager = MetadataManager()
 
     # Determine form key and load metadata
@@ -932,8 +1127,8 @@ def push_form(
             "Please pull the form first using: form-sync pull {form_path}"
         )
 
-    # Check if form is in refs location (read-only) - skip for preview mode
-    if form_metadata.location == "refs" and not preview_path:
+    # Check if form is in refs location (read-only) - skip for preview and to-original modes
+    if form_metadata.location == "refs" and not preview_path and not to_original:
         raise FormSyncError(
             f"Cannot push form '{form_key}' - it's in refs directory (read-only).\n"
             f"Pull the form without --no-edit to sync an editable copy to repo."
@@ -959,43 +1154,34 @@ def push_form(
         if form_metadata.current_path:
             client.check_path_allowed(form_metadata.current_path)
 
-    # Load the local form JSON
-    # Determine base directory from form location
-    base_dir = config.repo_dir if form_metadata.location == "repo" else config.refs_dir
-
-    if source_file:
-        # User-provided source file
-        local_path = (
-            Path(source_file)
-            if Path(source_file).is_absolute()
-            else get_working_dir() / source_file
-        )
+    # Load form data — either from preloaded data or from disk
+    if _preloaded_data is not None:
+        form_data = _preloaded_data
     else:
-        # Use path from metadata (relative to base_dir)
-        local_path = base_dir / form_metadata.local_file
-
-    if not local_path.exists():
-        raise FormSyncError(f"Local form file not found: {local_path}")
-
-    with open(local_path, "r", encoding="utf-8") as f:
-        form_data = json.load(f)
-
-    # Restore rules from rule.json file before pushing
-    # Rules file is in the same directory as the form file
-    working_dir = local_path.parent
-    load_and_restore_rules(form_data, form_metadata, base_dir)
-
-    # Get cloud token for Universal Editor API
-    log("Fetching cloud token...")
-    cloud_token = auth_manager.get_cloud_token()
-    log("Cloud token obtained")
+        form_data = _load_form_data(form_metadata, config, source_file)
 
     # Determine if we should update existing form or create new one
     # Preview mode always creates a new form at the preview path
     current_path = form_metadata.current_path
     is_new_form = False
 
-    if preview_path:
+    if to_original:
+        # Push directly to originalPath — patch in-place, no new form created
+        target_path = form_metadata.original_path
+        client.check_path_allowed(target_path)
+        entity_type = "fragment" if form_metadata.fragment else "form"
+        log(f"Pushing to original path: {target_path}")
+
+        log(f"Patching {entity_type} with new content...")
+        patch_form_content(
+            config=config,
+            form_path=target_path,
+            form_data=form_data,
+        )
+        log(f"{entity_type.capitalize()} content updated successfully")
+        return target_path, False
+
+    elif preview_path:
         # Preview mode: always create a new form/fragment at preview path
         is_new_form = True
 
@@ -1032,7 +1218,6 @@ def push_form(
         log("Patching form content...")
         patch_form_content(
             config=config,
-            cloud_token=cloud_token,
             form_path=target_path,
             form_data=form_data,
         )
@@ -1048,7 +1233,6 @@ def push_form(
         log(f"Patching {entity_type} with new content...")
         patch_form_content(
             config=config,
-            cloud_token=cloud_token,
             form_path=current_path,
             form_data=form_data,
         )
@@ -1121,7 +1305,6 @@ def push_form(
         log("Patching form content...")
         patch_form_content(
             config=config,
-            cloud_token=cloud_token,
             form_path=target_path,
             form_data=form_data,
         )
@@ -1192,3 +1375,196 @@ def _find_form_key(
         f"Form not found in metadata.json for path: {form_path}\n"
         "Please pull the form first."
     )
+
+
+def _load_form_data(
+    form_metadata: FormMetadata,
+    config: Config,
+    source_file: Optional[str] = None,
+) -> dict:
+    """
+    Load form JSON from disk and restore rules.
+
+    Args:
+        form_metadata: Metadata for the form/fragment.
+        config: Configuration object.
+        source_file: Optional user-provided source file path.
+
+    Returns:
+        The loaded and rules-restored form data dict.
+    """
+    base_dir = config.repo_dir if form_metadata.location == "repo" else config.refs_dir
+
+    if source_file:
+        local_path = Path(source_file) if Path(source_file).is_absolute() else get_working_dir() / source_file
+    else:
+        local_path = base_dir / form_metadata.local_file
+
+    if not local_path.exists():
+        raise FormSyncError(f"Local form file not found: {local_path}")
+
+    with open(local_path, "r", encoding="utf-8") as f:
+        form_data = json.load(f)
+
+    load_and_restore_rules(form_data, form_metadata, base_dir)
+    return form_data
+
+
+def push_with_fragments(
+    form_path: str,
+    config: Config,
+    source_file: Optional[str] = None,
+    suffix: str = "-v1",
+    force_new: bool = False,
+    on_progress: Optional[callable] = None,
+    preview_path: Optional[str] = None,
+    to_original: bool = False,
+    _visited: Optional[set] = None,
+    _pushed_paths: Optional[dict] = None,
+) -> list[tuple[str, bool]]:
+    """
+    Push a form/fragment and recursively push all dependent fragments.
+
+    Mirrors pull_with_fragments(): discovers fragment references, pushes
+    them first (bottom-up), rewrites fragmentPath values to point to the
+    pushed locations, then pushes the parent form.
+
+    Args:
+        form_path: Original AEM form path.
+        config: Configuration object.
+        source_file: Optional source file (only for top-level call).
+        suffix: Suffix for new form/fragment names.
+        force_new: Force creation of new forms.
+        on_progress: Optional callback for progress messages.
+        preview_path: Preview folder path (DAM format) for --preview mode.
+        to_original: If True, push to originalPath.
+        _visited: Internal set of already-pushed paths (for recursion).
+        _pushed_paths: Internal shared dict of {original_path: target_path}
+            accumulated across all recursion levels. Allows a parent to
+            rewrite references to fragments that were already pushed by a
+            sibling's recursion (the "diamond" pattern).
+
+    Returns:
+        List of (target_path, is_new_form) tuples for all pushed items.
+    """
+    def log(message: str) -> None:
+        if on_progress:
+            on_progress(message)
+
+    is_top_level = _visited is None
+    if _visited is None:
+        _visited = set()
+    if _pushed_paths is None:
+        _pushed_paths = {}
+
+    normalized_path = _normalize_fragment_path(form_path)
+    if normalized_path in _visited:
+        return []
+    _visited.add(normalized_path)
+
+    # Look up form/fragment in metadata
+    metadata_manager = MetadataManager()
+    form_key, form_metadata = _find_metadata_by_original_path(metadata_manager, form_path)
+
+    if form_key is None:
+        # Try the standard lookup (handles source_file case)
+        try:
+            form_name = extract_form_name(form_path)
+            form_key = _find_form_key(metadata_manager, form_path, form_name, source_file)
+            form_metadata = metadata_manager.get_form(form_key)
+        except VersionFileError:
+            if is_top_level:
+                raise
+            log(f"WARNING: Fragment not found in metadata: {form_path} — skipping")
+            return []
+
+    if form_metadata is None:
+        if is_top_level:
+            raise VersionFileError(
+                f"Form not found in metadata.json for path: {form_path}\n"
+                "Please pull the form first."
+            )
+        log(f"WARNING: Fragment not found in metadata: {form_path} — skipping")
+        return []
+
+    # Load form data from disk
+    # source_file only applies to top-level (user-specified), not recursive fragments
+    try:
+        form_data = _load_form_data(form_metadata, config, source_file)
+    except FormSyncError as e:
+        if is_top_level:
+            raise
+        log(f"WARNING: Could not load data for {form_path}: {e} — skipping")
+        return []
+
+    # Discover dependent fragments
+    fragment_paths = extract_fragment_paths(form_data)
+    results = []
+
+    if fragment_paths:
+        log(f"Found {len(fragment_paths)} fragment reference(s) in {form_path}")
+
+    for frag_path in fragment_paths:
+        frag_normalized = _normalize_fragment_path(frag_path)
+        if frag_normalized in _visited:
+            log(f"  Skipping already-pushed fragment: {frag_path}")
+            continue
+
+        log(f"  Pushing fragment: {frag_path}")
+        try:
+            # Recursively push fragment (no source_file for dependencies)
+            sub_results = push_with_fragments(
+                frag_normalized,
+                config,
+                source_file=None,
+                suffix=suffix,
+                force_new=force_new,
+                on_progress=on_progress,
+                preview_path=preview_path,
+                to_original=to_original,
+                _visited=_visited,
+                _pushed_paths=_pushed_paths,
+            )
+            results.extend(sub_results)
+        except Exception as e:
+            # Always print warnings for fragment failures (not just verbose mode)
+            print(f"  WARNING: Failed to push fragment {frag_path}: {e}")
+
+    # Build path_map for this form from the shared _pushed_paths.
+    # This includes fragments pushed by sibling recursions (diamond pattern),
+    # not just fragments pushed directly by this call.
+    path_map = {}
+    for frag_path in fragment_paths:
+        frag_normalized = _normalize_fragment_path(frag_path)
+        if frag_normalized in _pushed_paths:
+            path_map[frag_normalized] = _pushed_paths[frag_normalized]
+
+    # Rewrite fragment paths if needed.
+    # For --to-original, fragments are pushed to their originalPath which is
+    # already what fragmentPath values point to, so no rewrite is needed.
+    needs_rewrite = bool(path_map) and not to_original
+    if needs_rewrite:
+        log(f"Rewriting {len(path_map)} fragment path(s)")
+        _rewrite_fragment_paths(form_data, path_map)
+
+    # Push this form/fragment with the (possibly rewritten) data.
+    # source_file is not passed since data is already loaded via _preloaded_data.
+    target_path, is_new = push_form(
+        form_path,
+        config,
+        source_file=None,
+        suffix=suffix,
+        force_new=force_new,
+        on_progress=on_progress,
+        preview_path=preview_path,
+        to_original=to_original,
+        _preloaded_data=form_data,
+    )
+
+    # Record in shared map so sibling/parent recursions can see where we landed
+    _pushed_paths[normalized_path] = target_path
+
+    # This form/fragment comes first in results, followed by its dependencies
+    results.insert(0, (target_path, is_new))
+    return results
+

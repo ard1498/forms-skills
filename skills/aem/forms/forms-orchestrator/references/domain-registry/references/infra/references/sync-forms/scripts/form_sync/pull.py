@@ -170,6 +170,118 @@ def is_fragment(form_data: dict) -> bool:
     return form_data.get("fd:type") == "fragment"
 
 
+def _collect_fragment_paths(data, paths: list) -> None:
+    """Recursively collect fragmentPath values from form data."""
+    if isinstance(data, dict):
+        if "fragmentPath" in data:
+            path = data["fragmentPath"]
+            # Normalize DAM path to forms path
+            if path.startswith("/content/dam/formsanddocuments/"):
+                path = path.replace("/content/dam/formsanddocuments/", "/content/forms/af/")
+            paths.append(path)
+        for value in data.values():
+            _collect_fragment_paths(value, paths)
+    elif isinstance(data, list):
+        for item in data:
+            _collect_fragment_paths(item, paths)
+
+
+def extract_fragment_paths(data: dict) -> list:
+    """
+    Recursively extract all fragmentPath values from form data.
+
+    Normalizes /content/dam/formsanddocuments/ paths to /content/forms/af/.
+    Returns a deduplicated list preserving first-seen order.
+
+    Args:
+        data: Form JSON data.
+
+    Returns:
+        List of unique AEM fragment paths.
+    """
+    paths = []
+    _collect_fragment_paths(data, paths)
+    seen = set()
+    unique = []
+    for p in paths:
+        if p not in seen:
+            seen.add(p)
+            unique.append(p)
+    return unique
+
+
+def pull_with_fragments(
+    form_path: str,
+    config: Config,
+    extract_rules: bool = True,
+    output_dir: Path = None,
+    no_edit: bool = False,
+    _visited: set = None,
+) -> list:
+    """
+    Pull a form/fragment and recursively pull all referenced fragments.
+
+    Traverses the full dependency tree: form → fragment → nested fragment, etc.
+    Already-visited paths are skipped to prevent infinite loops.
+
+    Args:
+        form_path: Full AEM path to the form/fragment.
+        config: Configuration object with AEM credentials.
+        extract_rules: If True (default), extract rules.
+        output_dir: Optional custom output directory for the top-level pull.
+                    Fragment dependencies are always saved under repo/refs natural paths.
+        no_edit: If True, sync to refs directory (read-only reference).
+        _visited: Internal set of already-pulled paths (used for recursion).
+
+    Returns:
+        List of (output_path, form_key) tuples for every pulled item.
+    """
+    if _visited is None:
+        _visited = set()
+
+    if form_path in _visited:
+        return []
+    _visited.add(form_path)
+
+    # Pull this form/fragment
+    output_path, form_key = pull_form(
+        form_path, config,
+        extract_rules=extract_rules,
+        output_dir=output_dir,
+        no_edit=no_edit,
+    )
+    results = [(output_path, form_key)]
+
+    # Read the saved file to discover fragment references
+    with open(output_path, "r", encoding="utf-8") as f:
+        form_data = json.load(f)
+
+    fragment_paths = extract_fragment_paths(form_data)
+
+    if fragment_paths:
+        print(f"Found {len(fragment_paths)} fragment reference(s) in {form_path}")
+
+    for frag_path in fragment_paths:
+        if frag_path in _visited:
+            print(f"  Skipping already-pulled fragment: {frag_path}")
+            continue
+        print(f"  Pulling fragment: {frag_path}")
+        try:
+            # Fragments always use natural path structure (no custom output_dir)
+            sub_results = pull_with_fragments(
+                frag_path, config,
+                extract_rules=extract_rules,
+                output_dir=None,
+                no_edit=no_edit,
+                _visited=_visited,
+            )
+            results.extend(sub_results)
+        except Exception as e:
+            print(f"  WARNING: Failed to pull fragment {frag_path}: {e}")
+
+    return results
+
+
 def pull_form(
     form_path: str,
     config: Config,

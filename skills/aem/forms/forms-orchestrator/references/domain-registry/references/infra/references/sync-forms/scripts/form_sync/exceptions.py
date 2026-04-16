@@ -57,3 +57,9 @@ class PathNotAllowedError(FormSyncError):
 
     pass
 
+
+class NodeExistsError(FormSyncError):
+    """Raised when a node already exists in AEM (HTTP 409)."""
+
+    pass
+

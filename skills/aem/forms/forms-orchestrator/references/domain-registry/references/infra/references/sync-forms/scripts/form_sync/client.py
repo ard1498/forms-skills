@@ -9,6 +9,7 @@ from .exceptions import (
     AuthenticationError,
     FormNotFoundError,
     FormSyncError,
+    NodeExistsError,
     PathNotAllowedError,
 )
 
@@ -130,15 +131,19 @@ class AEMClient:
             FormNotFoundError: If resource not found (404).
             FormSyncError: For other HTTP errors.
         """
-        if response.status_code == 401:
+        if response.status_code == 409:
+            raise NodeExistsError(
+                f"Node already exists at {path}"
+            )
+        elif response.status_code == 401:
             raise AuthenticationError(
                 "Authentication failed. Your token may be expired or invalid.\n"
-                "Run forms-orchestrator/scripts/setup.sh to refresh credentials."
+                "Run 'form-sync login' to get a fresh token."
             )
         elif response.status_code == 403:
             raise AuthenticationError(
                 "Access forbidden. Your token may be expired or you lack permissions.\n"
-                "Run forms-orchestrator/scripts/setup.sh to refresh credentials."
+                "Run 'form-sync login' to get a fresh token."
             )
         elif response.status_code == 404:
             raise FormNotFoundError(f"Resource not found: {path}")

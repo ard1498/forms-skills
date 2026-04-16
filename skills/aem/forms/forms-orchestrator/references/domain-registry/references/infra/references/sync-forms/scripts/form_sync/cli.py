@@ -21,7 +21,9 @@ def log_verbose(message: str) -> None:
 
 @click.group()
 @click.version_option(version=__version__, prog_name="form-sync")
-def cli():
+@click.option("--verbose", "-v", is_flag=True, help="Enable verbose output for debugging")
+@click.pass_context
+def cli(ctx, verbose):
     """AEM Form Sync - Pull and push forms to Adobe Experience Manager.
 
     \b
@@ -29,14 +31,14 @@ def cli():
         form-sync pull /content/forms/af/myform
         form-sync push /content/forms/af/myform
     """
-    pass
+    global _verbose
+    _verbose = verbose
+    ctx.ensure_object(dict)
+    ctx.obj["verbose"] = verbose
 
 
 @cli.command()
 @click.argument("form_path")
-@click.option(
-    "--verbose", "-v", is_flag=True, help="Enable verbose output for debugging"
-)
 @click.option("--no-rules", is_flag=True, help="Skip rules extraction")
 @click.option(
     "--output",
@@ -47,11 +49,18 @@ def cli():
 @click.option(
     "--no-edit", is_flag=True, help="Sync to refs directory (read-only reference)"
 )
-def pull(form_path: str, verbose: bool, no_rules: bool, output: str, no_edit: bool):
+@click.option("--no-fragments", is_flag=True, help="Skip recursive fragment pull (pull top-level form only)")
+@click.pass_context
+def pull(ctx, form_path: str, no_rules: bool, output: str, no_edit: bool, no_fragments: bool):
     """Pull a form from AEM to local filesystem.
 
     \b
     FORM_PATH: Full AEM path to the form (e.g., /content/forms/af/myform)
+
+    \b
+    By default, all fragment dependencies are pulled recursively
+    (form → frag-1 → frag-2, etc.). Use --no-fragments to pull the
+    top-level form only.
 
     \b
     By default, forms are synced to repo/ directory (editable).
@@ -61,16 +70,17 @@ def pull(form_path: str, verbose: bool, no_rules: bool, output: str, no_edit: bo
     Examples:
         form-sync pull /content/forms/af/acroform
         form-sync pull /content/forms/af/acroform --no-edit
-        form-sync pull /content/forms/af/acroform --verbose
+        form-sync -v pull /content/forms/af/acroform
         form-sync pull /content/forms/af/acroform --no-rules
         form-sync pull /content/forms/af/acroform --output ./forms
+        form-sync pull /content/forms/af/acroform --no-fragments
     """
-    global _verbose
-    _verbose = verbose
+    verbose = ctx.obj["verbose"]
 
+    import json
     from pathlib import Path
 
-    from .pull import pull_form
+    from .pull import pull_form, pull_with_fragments, extract_fragment_paths
 
     # Validate mutual exclusion
     if output and no_edit:
@@ -95,20 +105,44 @@ def pull(form_path: str, verbose: bool, no_rules: bool, output: str, no_edit: bo
             log_verbose("Syncing to refs directory (read-only)")
         if output:
             log_verbose(f"Output directory: {output}")
+        if no_fragments:
+            log_verbose("Fragment pull skipped (--no-fragments)")
 
         output_dir = Path(output) if output else None
-        output_path, form_key = pull_form(
-            form_path,
-            config,
-            extract_rules=not no_rules,
-            output_dir=output_dir,
-            no_edit=no_edit,
-        )
 
-        # Success output
-        click.echo(f"✓ Saved to {output_path}")
-        click.echo(f"✓ Updated metadata.json (key: {form_key})")
-        click.secho("SUCCESS: Form pulled successfully", fg="green")
+        if no_fragments:
+            output_path, form_key = pull_form(
+                form_path, config,
+                extract_rules=not no_rules,
+                output_dir=output_dir,
+                no_edit=no_edit,
+            )
+            click.echo(f"✓ Saved to {output_path}")
+            click.echo(f"✓ Updated metadata.json (key: {form_key})")
+
+            # Hint if the form has fragment references
+            with open(output_path, "r", encoding="utf-8") as f:
+                form_data = json.load(f)
+            fragment_paths = extract_fragment_paths(form_data)
+            if fragment_paths:
+                click.secho(
+                    f"ℹ  Found {len(fragment_paths)} fragment reference(s). "
+                    "Re-run without --no-fragments to pull them too.",
+                    fg="yellow"
+                )
+
+            click.secho("SUCCESS: Form pulled successfully", fg="green")
+        else:
+            results = pull_with_fragments(
+                form_path, config,
+                extract_rules=not no_rules,
+                output_dir=output_dir,
+                no_edit=no_edit,
+            )
+            for out_path, form_key in results:
+                click.echo(f"✓ Saved to {out_path} (key: {form_key})")
+            click.echo(f"✓ Updated metadata.json ({len(results)} item(s) total)")
+            click.secho(f"SUCCESS: Pulled {len(results)} form(s)/fragment(s)", fg="green")
 
     except FormSyncError as e:
         click.secho(f"ERROR: {e}", fg="red", err=True)
@@ -127,9 +161,6 @@ def pull(form_path: str, verbose: bool, no_rules: bool, output: str, no_edit: bo
 
 @cli.command("list")
 @click.argument("dam_path")
-@click.option(
-    "--verbose", "-v", is_flag=True, help="Enable verbose output for debugging"
-)
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
 @click.option("--pull", "do_pull", is_flag=True, help="Pull all listed forms")
 @click.option("--no-rules", is_flag=True, help="Skip rules extraction when pulling")
@@ -144,9 +175,10 @@ def pull(form_path: str, verbose: bool, no_rules: bool, output: str, no_edit: bo
     is_flag=True,
     help="Sync pulled forms to refs directory (read-only reference)",
 )
+@click.pass_context
 def list_forms(
+    ctx,
     dam_path: str,
-    verbose: bool,
     as_json: bool,
     do_pull: bool,
     no_rules: bool,
@@ -167,8 +199,7 @@ def list_forms(
         form-sync list /content/dam/formsanddocuments/form-coder/fragments --pull --no-rules
         form-sync list /content/dam/formsanddocuments/form-coder/fragments --pull --output ./forms
     """
-    global _verbose
-    _verbose = verbose
+    verbose = ctx.obj["verbose"]
 
     import json
     from pathlib import Path
@@ -309,20 +340,35 @@ def list_forms(
     help="Push to preview path defined by FORM_SYNC_PREVIEW_PATH env variable",
 )
 @click.option(
-    "--verbose", "-v", is_flag=True, help="Enable verbose output for debugging"
+    "--to-original",
+    "to_original",
+    is_flag=True,
+    help="Push directly to the original AEM path (originalPath in metadata)",
 )
+@click.option(
+    "--no-fragments",
+    is_flag=True,
+    help="Skip recursive fragment push (push only the specified form/fragment)",
+)
+@click.pass_context
 def push(
+    ctx,
     form_path: str,
     source: str,
     suffix: str,
     force_new: bool,
     preview: bool,
-    verbose: bool,
+    to_original: bool,
+    no_fragments: bool,
 ):
     """Push a local form to AEM.
 
     \b
     FORM_PATH: Full AEM path for the form (e.g., /content/forms/af/myform)
+
+    \b
+    By default, pushes dependent fragments recursively (like pull does).
+    Use --no-fragments to push only the specified form/fragment.
 
     \b
     Examples:
@@ -331,17 +377,32 @@ def push(
         form-sync push /content/forms/af/acroform --suffix -v2
         form-sync push /content/forms/af/acroform --new
         form-sync push /content/forms/af/acroform --preview
-        form-sync push /content/forms/af/acroform --verbose
+        form-sync push /content/forms/af/acroform --to-original
+        form-sync push /content/forms/af/acroform --no-fragments
+        form-sync -v push /content/forms/af/acroform
 
     \b
     Note: First push creates a new form with suffix. Subsequent pushes
     update the existing form. Use --new to create a new form instead.
     Use --preview to push to a separate preview path (requires FORM_SYNC_PREVIEW_PATH env).
+    Use --to-original to push directly to the original AEM path (skips versioning).
+    Use --no-fragments to skip pushing dependent fragments.
     """
-    global _verbose
-    _verbose = verbose
+    verbose = ctx.obj["verbose"]
 
-    from .push import push_form
+    from .push import push_form, push_with_fragments
+
+    # Validate mutual exclusions
+    if to_original and force_new:
+        raise click.UsageError("Cannot use --to-original with --new.")
+    if to_original and preview:
+        raise click.UsageError("Cannot use --to-original with --preview.")
+
+    # Validate mutual exclusions
+    if to_original and force_new:
+        raise click.UsageError("Cannot use --to-original with --new.")
+    if to_original and preview:
+        raise click.UsageError("Cannot use --to-original with --preview.")
 
     try:
         # Load configuration
@@ -383,24 +444,42 @@ def push(
             if verbose:
                 click.echo(f"  {message}")
 
-        target_path, is_new_form = push_form(
-            form_path,
-            config,
-            source,
-            suffix,
-            force_new,
-            on_progress if verbose else None,
-            preview_path=preview_path,
-        )
+        if to_original:
+            log_verbose("Pushing to original AEM path")
+        if no_fragments:
+            log_verbose("Fragment push skipped (--no-fragments)")
+
+        progress_cb = on_progress if verbose else None
+
+        if no_fragments:
+            # Push only the specified form/fragment (original behavior)
+            target_path, is_new_form = push_form(
+                form_path, config, source, suffix, force_new, progress_cb,
+                preview_path=preview_path,
+                to_original=to_original,
+            )
+            results = [(target_path, is_new_form)]
+        else:
+            # Recursively push dependent fragments, then the form
+            results = push_with_fragments(
+                form_path, config, source, suffix, force_new, progress_cb,
+                preview_path=preview_path,
+                to_original=to_original,
+            )
 
         # Success output
-        if is_new_form:
-            click.echo(f"✓ Created new form: {target_path}")
-        else:
-            click.echo(f"✓ Updated existing form: {target_path}")
-        click.echo(f"✓ Updated metadata.json")
+        for target_path, is_new_form in results:
+            if is_new_form:
+                click.echo(f"  Created new: {target_path}")
+            else:
+                click.echo(f"  Updated: {target_path}")
+
+        main_target = results[0][0] if results else form_path
+        click.echo(f"✓ Pushed {len(results)} form(s)/fragment(s)")
+        if not preview and not to_original and any(is_new for _, is_new in results):
+            click.echo(f"✓ Updated metadata.json")
         click.secho(
-            f"SUCCESS: Form pushed to {target_path}",
+            f"SUCCESS: Form pushed to {main_target}",
             fg="green",
         )
 
@@ -421,10 +500,8 @@ def push(
 
 @cli.command()
 @click.argument("form_path")
-@click.option(
-    "--verbose", "-v", is_flag=True, help="Enable verbose output for debugging"
-)
-def clear(form_path: str, verbose: bool):
+@click.pass_context
+def clear(ctx, form_path: str):
     """Clear a local form to empty state.
 
     \b
@@ -437,10 +514,9 @@ def clear(form_path: str, verbose: bool):
     \b
     Examples:
         form-sync clear /content/forms/af/forms-team/demo
-        form-sync clear /content/forms/af/my-project/my-form --verbose
+        form-sync -v clear /content/forms/af/my-project/my-form
     """
-    global _verbose
-    _verbose = verbose
+    verbose = ctx.obj["verbose"]
 
     import json
     from pathlib import Path
@@ -537,10 +613,8 @@ def clear(form_path: str, verbose: bool):
 @cli.command()
 @click.argument("folder_path")
 @click.argument("form_name")
-@click.option(
-    "--verbose", "-v", is_flag=True, help="Enable verbose output for debugging"
-)
-def create(folder_path: str, form_name: str, verbose: bool):
+@click.pass_context
+def create(ctx, folder_path: str, form_name: str):
     """Create a new empty form on AEM.
 
     \b
@@ -557,8 +631,7 @@ def create(folder_path: str, form_name: str, verbose: bool):
     Note: The folder must be in your AEM_WRITE_PATHS.
     If a form with the same name exists, a suffix (-1, -2, etc.) will be added.
     """
-    global _verbose
-    _verbose = verbose
+    verbose = ctx.obj["verbose"]
 
     import time
 
@@ -708,10 +781,8 @@ def create(folder_path: str, form_name: str, verbose: bool):
 @cli.command("create-fragment")
 @click.argument("folder_path")
 @click.argument("fragment_name")
-@click.option(
-    "--verbose", "-v", is_flag=True, help="Enable verbose output for debugging"
-)
-def create_fragment(folder_path: str, fragment_name: str, verbose: bool):
+@click.pass_context
+def create_fragment(ctx, folder_path: str, fragment_name: str):
     """Create a new empty fragment on AEM.
 
     \b
@@ -728,8 +799,7 @@ def create_fragment(folder_path: str, fragment_name: str, verbose: bool):
     Note: The folder must be in your AEM_WRITE_PATHS.
     If a fragment with the same name exists, a suffix (-1, -2, etc.) will be added.
     """
-    global _verbose
-    _verbose = verbose
+    verbose = ctx.obj["verbose"]
 
     import time
 
@@ -882,6 +952,88 @@ def create_fragment(folder_path: str, fragment_name: str, verbose: bool):
             )
         else:
             click.secho(f"UNEXPECTED ERROR: {e}", fg="red", err=True)
+        sys.exit(1)
+
+
+@cli.command()
+@click.pass_context
+def login(ctx):
+    """Refresh your AEM authentication token.
+
+    \b
+    Guides you through getting a fresh token from Adobe Experience Cloud
+    and saves it as AEM_TOKEN in your .env file.
+
+    \b
+    Steps (also shown interactively):
+        1. Open https://experience.adobe.com/ and log in
+        2. Press Ctrl+I to open the token inspector
+        3. Copy the token and paste it here
+
+    \b
+    Examples:
+        form-sync login
+    """
+    import webbrowser
+    from dotenv import find_dotenv, set_key
+    from pathlib import Path
+
+    verbose = ctx.obj["verbose"]
+
+    ADOBE_URL = "https://experience.adobe.com/"
+
+    click.echo()
+    click.secho("AEM Token Refresh", bold=True)
+    click.echo("─" * 50)
+    click.echo()
+    click.echo("Follow these steps to get a fresh token:\n")
+    click.secho(f"  1. Open:   {ADOBE_URL}", fg="cyan")
+    click.echo( "  2. Log in with your Adobe credentials")
+    click.secho("  3. Press   Ctrl+I  (opens the token inspector)", fg="cyan")
+    click.echo( "  4. Copy the token from the inspector")
+    click.echo()
+
+    # Best-effort browser open
+    try:
+        click.echo("Opening browser...")
+        webbrowser.open(ADOBE_URL)
+    except Exception:
+        pass
+
+    click.echo()
+    click.echo("A text editor will open — paste the token there, save, and close.")
+    input("Press Enter to open the editor...")
+
+    instructions = "# Paste your AEM token below (lines starting with # are ignored):\n\n"
+    result = click.edit(instructions)
+
+    if not result:
+        click.secho("ERROR: No token provided (editor closed without saving).", fg="red", err=True)
+        sys.exit(1)
+
+    # Strip comment lines, join remaining content (token may wrap across lines in some editors)
+    lines = [l for l in result.splitlines() if not l.startswith("#") and l.strip()]
+    token = "".join(lines).strip()
+
+    if not token:
+        click.secho("ERROR: Token cannot be empty.", fg="red", err=True)
+        sys.exit(1)
+
+    # Find the .env file (search from CWD upwards)
+    env_path = find_dotenv(usecwd=True)
+    if not env_path:
+        env_path = str(Path.cwd() / ".env")
+        click.echo(f"No .env file found — creating: {env_path}")
+
+    log_verbose(f".env path: {env_path}")
+
+    try:
+        set_key(env_path, "AEM_TOKEN", token)
+        click.echo()
+        click.secho(f"✓ AEM_TOKEN saved to {env_path}", fg="green")
+        click.secho("SUCCESS: Token updated. You can now run form-sync commands.", fg="green")
+    except Exception as e:
+        click.secho(f"ERROR: Failed to write token to .env: {e}", fg="red", err=True)
         sys.exit(1)
 
 

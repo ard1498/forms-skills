@@ -10,8 +10,8 @@ Source reference:
 
 | ID | PR Scope | Status | Depends On | Branch | PR Link | Merged |
 |----|----------|--------|------------|--------|---------|--------|
-| PR-01 | `rule_coder` tool sync | in_progress | — | `merge-xpl/rule-coder-sync` | TBD | no |
-| PR-02 | `api-manager` tool sync | planned | — | `merge-xpl/api-manager-sync` | TBD | no |
+| PR-01 | `rule_coder` tool sync | done | — | `merge-xpl/rule-coder-sync` | #2 | yes |
+| PR-02 | `api-manager` tool sync | done | — | `merge-xpl/api-manager-sync` | #3 | yes |
 | PR-03 | `form-sync` tool sync | planned | — | `merge-xpl/form-sync-sync` | TBD | no |
 | PR-04 | `git-sandbox` tool sync | planned | — | `merge-xpl/git-sandbox-sync` | TBD | no |
 | PR-05 | `create-function` skill sync | planned | PR-01, PR-02 | `merge-xpl/create-function-sync` | TBD | no |
