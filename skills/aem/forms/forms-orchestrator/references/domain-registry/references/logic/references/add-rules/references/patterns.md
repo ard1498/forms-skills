@@ -4,7 +4,6 @@
 
 | Rule | Why |
 |------|-----|
-| **ALWAYS use custom function for THEN logic** | Visual rules only hold WHEN/IF conditions. All actions go in custom functions via FUNCTION_CALL. Never use SHOW_STATEMENT, SET_VALUE_STATEMENT, etc. directly. |
 | **NEVER add unrequested behavior** | Only generate what user asked. Ask before adding else branches or extra validation. |
 | **Use variables, not hidden fields** | `setVariable`/`getVariable` for intermediate data. Keeps form model clean. |
 | **NEVER pass field references as function args** | Access fields via `globals.fragment.<fieldName>` inside the function body. The visual rule `params` array is always `[]`. |
