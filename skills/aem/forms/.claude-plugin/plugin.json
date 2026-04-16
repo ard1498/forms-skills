@@ -20,6 +20,7 @@
     "./forms-orchestrator/references/domain-registry/references/analysis/references/analyze-requirements",
     "./forms-orchestrator/references/domain-registry/references/analysis/references/analyze-v1-form",
     "./forms-orchestrator/references/domain-registry/references/analysis/references/create-screen-doc",
+    "./forms-orchestrator/references/domain-registry/references/analysis/references/jud-to-screen",
     "./forms-orchestrator/references/domain-registry/references/analysis/references/review-screen-doc",
     "./forms-orchestrator/references/domain-registry/references/build",
     "./forms-orchestrator/references/domain-registry/references/build/references/scaffold-form",
