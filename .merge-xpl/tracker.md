@@ -17,7 +17,7 @@ Source reference:
 | PR-05 | `create-function` skill sync | done | PR-01, PR-02 | `merge-xpl/create-function-sync` | #6 | yes |
 | PR-06 | `add-rules` skill sync | done | PR-01 | `merge-xpl/add-rules-sync` | #7 | yes |
 | PR-07 | `create-form` skill sync | done | — | `merge-xpl/create-form-sync` | #8 | yes |
-| PR-08 | `create-component` skill sync | in-progress | — | `merge-xpl/create-component-sync` | TBD | no |
+| PR-08 | `create-component` skill sync | done | — | `merge-xpl/create-component-sync` | #9 | yes |
 | PR-09 | analysis skill sync (`jud-to-screen` / `screen-builder`) | planned | — | `merge-xpl/analysis-skill-sync` | TBD | no |
 | PR-10 | catalog / routing cleanup | planned | PR-05, PR-06, PR-07, PR-08, PR-09 | `merge-xpl/catalog-routing-sync` | TBD | no |
 
@@ -38,5 +38,5 @@ Source reference:
 
 - Do not modify `.gitignore` or restore `forms-skills-issues.md` as part of this merge stream unless separately requested.
 - Do not port `.claude/CLAUDE.md` or source-repo journey assets.
-- Do not carry over `tools/cct` deletion blindly; this repo still contains local `cct` usage under `create-component`.
+- `cct` Python tool removed in PR-08; scaffolding now uses `npm run create:custom-component` from the EDS workspace.
 - Treat validator moves from `tools/eds-form-validator` as local adaptation work, not direct source deletions.
