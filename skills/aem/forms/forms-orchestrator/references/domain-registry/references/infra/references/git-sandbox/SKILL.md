@@ -3,8 +3,8 @@ name: git-sandbox
 description: >
   Provides a restricted, sandboxed git workspace for AI agents. Clones a repository
   using sparse checkout with configurable allowed paths, validates commits to ensure
-  only permitted files are included, validates push branch names, and supports hard
-  reset to clean state. Driven by a sandbox.json config file.
+  only permitted files are included, validates push branch names, supports rebase
+  before push, and supports hard reset to clean state. Driven by a sandbox.json config file.
   Triggers: git sandbox, sandbox, workspace, restricted git, safe git, allowed paths,
   sparse checkout, isolated workspace, git-sandbox.
 type: skill
@@ -42,6 +42,9 @@ You manage a restricted git workspace that ensures AI agents can only interact w
 | Check file status | `git-sandbox status` |
 | Commit changes | `git-sandbox commit -m "message"` |
 | Push to branch | `git-sandbox push <branch>` |
+| Push (skip rebase) | `git-sandbox push <branch> --no-rebase` |
+| Rebase onto origin | `git-sandbox rebase` |
+| Show current branch | `git-sandbox branch` |
 | Soft reset | `git-sandbox reset` |
 | Hard reset (re-clone) | `git-sandbox reset --hard` |
 | Show sample config | `git-sandbox example-config` |
@@ -53,7 +56,8 @@ You manage a restricted git workspace that ensures AI agents can only interact w
 3. **Work** — edit files within allowed paths
 4. **Check** — `git-sandbox status` to verify all changes are in allowed paths
 5. **Commit** — `git-sandbox commit -m "description"` (validates paths)
-6. **Push** — `git-sandbox push feature-branch` (validates branch name)
+6. **Rebase** — `git-sandbox rebase` to pull latest changes before pushing (optional, push does this automatically)
+7. **Push** — `git-sandbox push feature-branch` (validates branch name, rebases by default)
 
 ## Configuration
 
@@ -90,4 +94,5 @@ Create `sandbox.json` in project root:
 | Init fails | Check repo URL and `GITHUB_TOKEN` in `.env` |
 | Commit rejected | Run `status` — some changed files are outside `allowed_paths` |
 | Push rejected | Branch name doesn't match `allowed_branches` patterns |
+| Rebase conflicts | Rebase auto-aborts on conflict; resolve manually or use `--no-rebase` on push |
 | Stale workspace | Run `git-sandbox reset --hard` to re-clone |

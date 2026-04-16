@@ -266,12 +266,50 @@ class Workspace:
             files_committed=len(allowed),
         )
 
-    def push(self, branch: str) -> PushResult:
+    def rebase(self) -> str:
         """
-        Validate branch name and push changes.
+        Fetch latest changes from origin and rebase local commits on top.
+
+        Returns:
+            Message describing the rebase result
+
+        Raises:
+            WorkspaceError: If workspace not found or rebase fails with conflicts
+        """
+        if not self.exists():
+            raise WorkspaceError(f"Workspace not found: {self.root}")
+
+        current = self._get_current_branch()
+
+        # Fetch latest from origin
+        self._git("fetch", "origin", self.config.branch)
+
+        # Check if there are local commits to rebase
+        ahead = self._get_commits_ahead()
+        if ahead == 0:
+            return "Already up to date — nothing to rebase"
+
+        # Rebase onto the updated origin branch
+        base = self._get_base_ref()
+        result = self._git("rebase", base, check=False)
+
+        if result.returncode != 0:
+            # Abort the failed rebase to restore clean state
+            self._git("rebase", "--abort", check=False)
+            raise WorkspaceError(
+                f"Rebase failed due to conflicts. Aborted to preserve clean state.\n"
+                f"{result.stderr}"
+            )
+
+        return f"Rebased {ahead} commit(s) onto {base}"
+
+    def push(self, branch: str, rebase: bool = True) -> PushResult:
+        """
+        Validate branch name, optionally rebase, and push changes.
 
         Args:
             branch: Branch name to push to
+            rebase: If True, fetch and rebase before pushing (default: True)
 
         Returns:
             PushResult with operation details
@@ -292,12 +330,21 @@ class Workspace:
         if current != branch:
             self._git("checkout", "-B", branch)
 
+        # Rebase onto latest origin before pushing
+        rebase_msg = None
+        if rebase:
+            rebase_msg = self.rebase()
+
         # Push
         self._git("push", "-u", "origin", branch)
 
+        msg = f"Pushed to {branch}"
+        if rebase_msg:
+            msg = f"{rebase_msg}. {msg}"
+
         return PushResult(
             success=True,
-            message=f"Pushed to {branch}",
+            message=msg,
             branch=branch,
         )
 

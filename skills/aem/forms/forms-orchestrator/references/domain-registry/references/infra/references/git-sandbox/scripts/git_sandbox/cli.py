@@ -209,24 +209,32 @@ def commit(message: str, config: Path):
 @cli.command()
 @click.argument("branch")
 @click.option(
+    "--no-rebase",
+    is_flag=True,
+    default=False,
+    help="Skip rebase before pushing (default: rebase is on)",
+)
+@click.option(
     "--config",
     "-c",
     type=click.Path(exists=True, path_type=Path),
     help="Path to config file (default: sandbox.json)",
 )
-def push(branch: str, config: Path):
-    """Validate branch name and push to remote.
+def push(branch: str, no_rebase: bool, config: Path):
+    """Validate branch name, rebase, and push to remote.
 
     \b
     This command:
     - Validates branch name against allowed_branches
     - Creates the branch if needed
+    - Fetches latest changes and rebases local commits (unless --no-rebase)
     - Pushes to origin
 
     \b
     Example:
         git-sandbox push session-123
         git-sandbox push claude-feature-x
+        git-sandbox push session-123 --no-rebase
     """
     cfg = _load_config(config)
     ws = Workspace(cfg)
@@ -237,10 +245,10 @@ def push(branch: str, config: Path):
         sys.exit(1)
 
     try:
-        result = ws.push(branch)
+        result = ws.push(branch, rebase=not no_rebase)
 
         if result.success:
-            click.secho(f"Pushed to {result.branch}", fg="green")
+            click.secho(result.message, fg="green")
         else:
             click.secho(result.message, fg="red", err=True)
             click.echo()
@@ -248,6 +256,43 @@ def push(branch: str, config: Path):
             for p in cfg.allowed_branches:
                 click.echo(f"  {p}")
             sys.exit(1)
+
+    except GitSandboxError as e:
+        click.secho(f"Error: {e}", fg="red", err=True)
+        sys.exit(1)
+
+
+@cli.command()
+@click.option(
+    "--config",
+    "-c",
+    type=click.Path(exists=True, path_type=Path),
+    help="Path to config file (default: sandbox.json)",
+)
+def rebase(config: Path):
+    """Fetch latest changes and rebase local commits on top.
+
+    \b
+    This command:
+    - Fetches latest changes from the configured origin branch
+    - Rebases local commits on top
+    - Aborts and preserves clean state if conflicts occur
+
+    \b
+    Example:
+        git-sandbox rebase
+    """
+    cfg = _load_config(config)
+    ws = Workspace(cfg)
+
+    if not ws.exists():
+        click.secho(f"Workspace not found: {ws.root}", fg="red", err=True)
+        click.echo("Run 'git-sandbox init' first.")
+        sys.exit(1)
+
+    try:
+        msg = ws.rebase()
+        click.secho(msg, fg="green")
 
     except GitSandboxError as e:
         click.secho(f"Error: {e}", fg="red", err=True)
@@ -291,6 +336,57 @@ def reset(hard: bool, config: Path):
         else:
             click.secho(f"Soft reset to {base[:8]}", fg="green")
             click.echo("Changes preserved as unstaged.")
+
+    except GitSandboxError as e:
+        click.secho(f"Error: {e}", fg="red", err=True)
+        sys.exit(1)
+
+
+@cli.command()
+@click.option(
+    "--config",
+    "-c",
+    type=click.Path(exists=True, path_type=Path),
+    help="Path to config file (default: sandbox.json)",
+)
+def branch(config: Path):
+    """Show current branch and whether it can be pushed.
+
+    \b
+    Displays:
+    - Current branch name
+    - Whether it matches allowed_branches patterns
+    - Allowed branch patterns for reference
+
+    \b
+    Example:
+        git-sandbox branch
+    """
+    cfg = _load_config(config)
+    ws = Workspace(cfg)
+
+    if not ws.exists():
+        click.secho(f"Workspace not found: {ws.root}", fg="red", err=True)
+        click.echo("Run 'git-sandbox init' first.")
+        sys.exit(1)
+
+    try:
+        st = ws.status()
+        current = st.current_branch
+
+        click.echo(f"Current branch: {current}")
+
+        from .validator import validate_branch
+        is_allowed = validate_branch(current, cfg.allowed_branches)
+
+        if is_allowed:
+            click.secho(f"Branch '{current}' matches allowed patterns — ready to push", fg="green")
+        else:
+            click.secho(f"Branch '{current}' does not match allowed patterns", fg="yellow")
+            click.echo()
+            click.echo("Allowed branch patterns:")
+            for p in cfg.allowed_branches:
+                click.echo(f"  {p}")
 
     except GitSandboxError as e:
         click.secho(f"Error: {e}", fg="red", err=True)
