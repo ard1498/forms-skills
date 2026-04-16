@@ -2,11 +2,11 @@
 
 ## Status
 
-- Status: `planned`
+- Status: `done`
 - Depends on: none
 - Branch: `merge-xpl/form-sync-sync`
-- PR URL: `TBD`
-- Merge commit: `TBD`
+- PR URL: `#4`
+- Merge commit: `8a0ed38`
 
 ## Scope
 
