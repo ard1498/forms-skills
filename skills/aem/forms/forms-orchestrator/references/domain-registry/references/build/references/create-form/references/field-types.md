@@ -79,6 +79,16 @@ Options use parallel arrays:
 | `accept` | string | Accepted MIME types (e.g., ".pdf,.jpg") |
 | `maxFileSize` | string | Maximum file size |
 
+## Constraints
+
+- Field names: **unique**, **snake_case**
+- All fields must have `jcr:title`
+- Radio/checkbox groups: **minimum 2 options**
+- Pattern: valid JavaScript regex
+- Min < max (minLength ≤ maxLength, minimum ≤ maximum)
+- Dates: ISO 8601 format
+- Dropdowns use `enum` (values) + `enumNames` (display labels)
+
 ## Layout: Colspan
 
 `colspan` controls field width (1–12 columns, **as string**).
