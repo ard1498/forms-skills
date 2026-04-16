@@ -85,7 +85,7 @@ x-aem-config:
   encryptionRequired: false
   authType: None
   isOutputAnArray: false
-  bodyStructure: requestString   # 'requestString', 'none', or custom wrapper
+  bodyStructure: requestString   # 'requestString', 'none', 'RequestPayload', or 'requestContext,requestData' for multi-root
 
 paths:
   /api/endpoint.json:
@@ -131,7 +131,7 @@ components:
 
 | Field | Purpose |
 |-------|---------|
-| `x-aem-config.bodyStructure` | `"requestString"` wraps body in `{ requestString: {...} }`, `"none"` sends flat |
+| `x-aem-config.bodyStructure` | `"requestString"` wraps body in `{ requestString: {...} }`, `"none"` sends flat, `"RequestPayload"` or comma-separated names like `"requestContext,requestData"` for multi-root structures |
 | `x-aem-config.source` | `"local"` for manual, `"aem-api-integration"` for synced |
 | `x-success-condition` | JS expression to evaluate success from response |
 | `operationId` | Becomes the exported function name in generated client |

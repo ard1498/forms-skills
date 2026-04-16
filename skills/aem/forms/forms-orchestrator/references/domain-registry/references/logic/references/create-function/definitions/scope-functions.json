@@ -1,0 +1,96 @@
+{
+  "kbSource": [
+    "https://github.com/adobe-aem-forms/af2-docs/blob/main/spec/agent-kb/08-ootb-functions-reference.md"
+  ],
+  "setProperty": {
+    "args": [
+      { "name": "element", "kind": ["qualifiedName"], "required": true },
+      { "name": "payload", "kind": ["object"], "required": true }
+    ],
+    "semanticRules": [
+      { "type": "targetQualifiedName", "arg": 0 },
+      { "type": "payloadKeysMatchType", "targetArg": 0, "payloadArg": 1 }
+    ]
+  },
+  "validate": {
+    "args": [{ "name": "element", "kind": ["qualifiedName"], "required": false }],
+    "semanticRules": [{ "type": "optionalTargetQualifiedName", "arg": 0 }]
+  },
+  "importData": {
+    "args": [
+      { "name": "data", "kind": ["object"], "required": true },
+      { "name": "container", "kind": ["qualifiedName"], "required": false }
+    ],
+    "semanticRules": []
+  },
+  "exportData": {
+    "args": [],
+    "semanticRules": []
+  },
+  "submitForm": {
+    "args": [
+      { "name": "data", "kind": ["object"], "required": true },
+      { "name": "validateForm", "kind": ["boolean"], "required": false, "default": true },
+      { "name": "submitAs", "kind": ["string"], "required": false, "default": "multipart/form-data" }
+    ],
+    "semanticRules": []
+  },
+  "setFocus": {
+    "args": [
+      { "name": "element", "kind": ["qualifiedName"], "required": true },
+      { "name": "focusOption", "kind": ["string"], "required": false }
+    ],
+    "semanticRules": [{ "type": "targetQualifiedName", "arg": 0 }]
+  },
+  "dispatchEvent": {
+    "args": [
+      { "name": "element", "kind": ["qualifiedName"], "required": true },
+      { "name": "eventName", "kind": ["string"], "required": true },
+      { "name": "payload", "kind": ["object", "string", "number", "boolean"], "required": false }
+    ],
+    "semanticRules": [{ "type": "targetQualifiedName", "arg": 0 }]
+  },
+  "markFieldAsInvalid": {
+    "args": [
+      { "name": "fieldIdentifier", "kind": ["string"], "required": true },
+      { "name": "validationMessage", "kind": ["string"], "required": true },
+      { "name": "options", "kind": ["object"], "required": false }
+    ],
+    "semanticRules": []
+  },
+  "request": {
+    "args": [
+      { "name": "uri", "kind": ["string"], "required": true },
+      { "name": "httpVerb", "kind": ["string"], "required": true },
+      { "name": "payload", "kind": ["object"], "required": true },
+      { "name": "success", "kind": ["string"], "required": true },
+      { "name": "failure", "kind": ["string"], "required": true }
+    ],
+    "semanticRules": []
+  },
+  "setVariable": {
+    "args": [
+      { "name": "key", "kind": ["string"], "required": true },
+      { "name": "value", "kind": ["string", "number", "boolean", "object"], "required": true },
+      { "name": "scope", "kind": ["qualifiedName"], "required": false }
+    ],
+    "semanticRules": []
+  },
+  "getVariable": {
+    "args": [
+      { "name": "key", "kind": ["string"], "required": true },
+      { "name": "scope", "kind": ["qualifiedName"], "required": false }
+    ],
+    "semanticRules": []
+  },
+  "deprecated": {
+    "reset": {
+      "args": [{ "name": "element", "kind": ["qualifiedName"], "required": false }],
+      "replacement": "dispatchEvent($element, reset)"
+    },
+    "getData": {
+      "args": [],
+      "replacement": "exportData()"
+    }
+  }
+}

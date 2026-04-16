@@ -1,0 +1,17 @@
+{
+  "name": "@project/custom-functions-validator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "custom-functions-validate": "./cli.js"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "acorn": "^8.11.3",
+    "acorn-walk": "^8.3.2",
+    "comment-parser": "^1.4.1"
+  }
+}

@@ -13,8 +13,8 @@ Source reference:
 | PR-01 | `rule_coder` tool sync | done | — | `merge-xpl/rule-coder-sync` | #2 | yes |
 | PR-02 | `api-manager` tool sync | done | — | `merge-xpl/api-manager-sync` | #3 | yes |
 | PR-03 | `form-sync` tool sync | done | — | `merge-xpl/form-sync-sync` | #4 | yes |
-| PR-04 | `git-sandbox` tool sync | planned | — | `merge-xpl/git-sandbox-sync` | TBD | no |
-| PR-05 | `create-function` skill sync | planned | PR-01, PR-02 | `merge-xpl/create-function-sync` | TBD | no |
+| PR-04 | `git-sandbox` tool sync | done | — | `merge-xpl/git-sandbox-sync` | #5 | yes |
+| PR-05 | `create-function` skill sync | in-progress | PR-01, PR-02 | `merge-xpl/create-function-sync` | TBD | no |
 | PR-06 | `add-rules` skill sync | planned | PR-01 | `merge-xpl/add-rules-sync` | TBD | no |
 | PR-07 | `create-form` skill sync | planned | — | `merge-xpl/create-form-sync` | TBD | no |
 | PR-08 | `create-component` skill sync | planned | — | `merge-xpl/create-component-sync` | TBD | no |

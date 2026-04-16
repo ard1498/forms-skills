@@ -1,0 +1,41 @@
+{
+  "kbSource": [
+    "https://github.com/adobe-aem-forms/af2-docs/blob/main/spec/agent-kb/02-field-types-catalog.md",
+    "https://github.com/adobe-aem-forms/af2-docs/blob/main/spec/agent-kb/03-field-component-by-type.md",
+    "https://github.com/adobe-aem-forms/af2-docs/blob/main/spec/agent-kb/06-rule-properties-by-field-type.md",
+    "https://github.com/adobe-aem-forms/af2-docs/blob/main/spec/agent-kb/09-runtime-field-access-and-exposed-properties.md"
+  ],
+  "supportedFieldTypes": [
+    "text-input", "number-input", "date-input", "datetime-input", "file-input",
+    "drop-down", "radio-group", "checkbox-group", "plain-text", "checkbox",
+    "button", "multiline-input", "panel", "image", "email", "captcha",
+    "tel", "password", "range"
+  ],
+  "groups": {
+    "fieldLike": [
+      "text-input", "number-input", "date-input", "datetime-input", "multiline-input",
+      "email", "tel", "password", "range",
+      "file-input", "drop-down", "radio-group", "checkbox-group", "checkbox",
+      "button", "plain-text", "image", "captcha"
+    ],
+    "containerLike": ["panel", "form"],
+    "choiceLike": ["drop-down", "radio-group", "checkbox-group"]
+  },
+  "runtime": {
+    "commonExposedProperties": ["$value", "$valid", "$errorMessage", "$index", "$parent", "$qualifiedName", "$name", "$type", "$id", "$properties"],
+    "typeSpecificExposedProperties": {
+      "checkbox": ["$checked"],
+      "panel": ["$qualifiedName", "$index", "$parent", "length"],
+      "_panel_notes": "length is allowed on all panels as a workaround — it is only semantically valid on repeatable panels. Proper fix tracked in https://github.com/adobe-aem-forms/<project-repo>/issues/105 (requires transform-form.js to surface repeatable flag per node so the validator can restrict length to repeatable panels only)"
+    },
+    "ruleModifiableCommon": ["$visible", "$enabled", "$readOnly", "$required", "$label", "$description", "$value"],
+    "ruleModifiableByType": {
+      "panel": ["$minItems", "$maxItems", "$minOccur", "$maxOccur"],
+      "file-input": ["$accept", "$maxFileSize"],
+      "checkbox": ["$checked"]
+    },
+    "typeAliases": {
+      "form": "panel"
+    }
+  }
+}
