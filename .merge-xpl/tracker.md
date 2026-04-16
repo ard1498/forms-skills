@@ -18,8 +18,8 @@ Source reference:
 | PR-06 | `add-rules` skill sync | done | PR-01 | `merge-xpl/add-rules-sync` | #7 | yes |
 | PR-07 | `create-form` skill sync | done | — | `merge-xpl/create-form-sync` | #8 | yes |
 | PR-08 | `create-component` skill sync | done | — | `merge-xpl/create-component-sync` | #9 | yes |
-| PR-09 | analysis skill sync (`jud-to-screen` / `screen-builder`) | planned | — | `merge-xpl/analysis-skill-sync` | TBD | no |
-| PR-10 | catalog / routing cleanup | planned | PR-05, PR-06, PR-07, PR-08, PR-09 | `merge-xpl/catalog-routing-sync` | TBD | no |
+| PR-09 | analysis skill sync (`jud-to-screen`) | done | — | `merge-xpl/analysis-skill-sync` | #10 | yes |
+| PR-10 | catalog / routing cleanup | in-progress | PR-05, PR-06, PR-07, PR-08, PR-09 | `merge-xpl/catalog-routing-sync` | TBD | no |
 
 ## Merge Order
 

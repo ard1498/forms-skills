@@ -78,7 +78,7 @@ You don't need to memorize this — just start talking to the agent. The orchest
 
 | Domain | Purpose | Skills |
 |--------|---------|--------|
-| `analysis` | Requirements & documentation | `analyze-requirements`, `analyze-v1-form`, `create-screen-doc`, `review-screen-doc` |
+| `analysis` | Requirements & documentation | `analyze-requirements`, `analyze-v1-form`, `create-screen-doc`, `jud-to-screen`, `review-screen-doc` |
 | `build` | Form structure & components | `scaffold-form`, `create-form`, `create-component` |
 | `logic` | Business rules & functions | `add-rules`, `create-function`, `optimize-rules` |
 | `integration` | APIs & data | `manage-apis` |
@@ -255,7 +255,7 @@ forms/
 │           │   └── templates/
 │           │       └── domain-template.md
 │           └── references/
-│               ├── analysis/      # SKILL.md + references/{analyze-requirements, analyze-v1-form, create-screen-doc, review-screen-doc}
+│               ├── analysis/      # SKILL.md + references/{analyze-requirements, analyze-v1-form, create-screen-doc, jud-to-screen, review-screen-doc}
 │               ├── build/         # SKILL.md + references/{scaffold-form, create-form, create-component}
 │               ├── logic/         # SKILL.md + references/{add-rules, create-function, optimize-rules}
 │               ├── integration/   # SKILL.md + references/{manage-apis}
@@ -293,6 +293,10 @@ These tools live inside individual skill directories at `forms-orchestrator/refe
 | `form-validate` | `build/create-form` | Node.js |
 | `scaffold-form` | `build/scaffold-form` | Python |
 | `api-skill` | `integration/manage-apis` | Python |
+
+## Pending from XPL Sync
+
+- **`screen-builder`** — orchestration skill that decomposes a Screen.md into ordered user stories and executes them via build skills (`create-form`, `create-component`, `manage-apis`, `add-rules`). Present in the source XPL repo but not yet ported. Deferred because it sits above the analysis domain as an execution bridge.
 
 ## Adding a New Skill
 
