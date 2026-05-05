@@ -210,11 +210,8 @@ Offer these but don't require them:
 
 | Variable | Default | What to ask |
 |----------|---------|-------------|
-| `GITHUB_URL` | — | "If you'd like me to open PRs or push over HTTPS, what is the full GitHub URL for your EDS repo? (skip if using SSH or not needed)" |
-| `GITHUB_REPO` | — | "Repo in `owner/repo` format? (optional — can skip)" |
 | `GITHUB_TOKEN` | — | "GitHub PAT for authenticated push or `gh pr create`? (optional — skip if using SSH)" |
 | `GITHUB_BRANCH` | `main` | "Which branch? (default: main)" |
-| `FORM_SYNC_ENV` | `prod` | "Which environment profile? local / stage / prod (default: prod)" |
 
 #### Handling "skip" or "I'll do it later"
 
@@ -248,14 +245,9 @@ AEM_TOKEN=<paste-your-bearer-token-here>
 # ── AEM Write Paths ──────────────────────────────────────
 AEM_WRITE_PATHS=<collected-value>
 
-# ── GitHub (optional — required for authenticated git push over HTTPS or gh pr create) ──
-# GITHUB_URL=<your-eds-repo-url>
-# GITHUB_REPO=<owner/repo>
+# ── GitHub (optional — for authenticated git push over HTTPS or gh pr create) ──
 # GITHUB_TOKEN=<paste-your-github-pat-here>
 # GITHUB_BRANCH=main
-
-# ── Form Sync ────────────────────────────────────────────
-FORM_SYNC_ENV=<collected-value>
 ```
 
 After writing the file, tell the user to open it and paste their token:
@@ -442,15 +434,8 @@ All CLI tools shipped with the plugin auto-resolve the workspace directory by re
 | `AEM_USERNAME` | Yes* | Basic auth username (alternative to token) |
 | `AEM_PASSWORD` | Yes* | Basic auth password (alternative to token) |
 | `AEM_WRITE_PATHS` | Yes | Comma-separated AEM paths allowed for push |
-| `GITHUB_URL` | No | Full GitHub URL for the EDS repo (required for authenticated git push over HTTPS or `gh pr create`) |
-| `GITHUB_REPO` | No | Repository in `owner/repo` format (optional) |
 | `GITHUB_TOKEN` | No | Classic personal access token with `repo` scope — required for authenticated git push over HTTPS or `gh pr create` |
 | `GITHUB_BRANCH` | No | Branch to work from (default: `main`) |
-| `FORM_SYNC_ENV` | No | Environment profile — `local`, `stage`, or `prod` (default: `prod`) |
-| `UE_SERVICE_URL` | No | Universal Editor Service URL |
-| `UE_BEARER_TOKEN` | No | Universal Editor token (if static) |
-| `FORM_SYNC_REPO_DIR` | No | Local directory for editable form files (default: `./repo`) |
-| `FORM_SYNC_REFS_DIR` | No | Local directory for reference files (default: `./refs`) |
 | `DEBUG` | No | Set to `true` to enable rule bridge debug output |
 
 *Either `AEM_TOKEN` or `AEM_USERNAME` + `AEM_PASSWORD` must be provided.
