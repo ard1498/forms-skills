@@ -151,7 +151,7 @@ If you have a running form URL where the component is in use, validate that it l
 |--------|---------|
 | Scaffold component | `npm run create:custom-component -- --name <fd:viewType> --base <base_type>` |
 
-Run from the `code` folder inside the project.
+Run from the EDS repo root (`$FORMS_EDS_ROOT`).
 
 ## Base Types
 
