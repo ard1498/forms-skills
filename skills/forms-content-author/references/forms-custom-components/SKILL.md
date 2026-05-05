@@ -33,7 +33,7 @@ You create custom form components by extending out-of-the-box (OOTB) field types
 ## Critical Rules
 
 1. **Always use `npm run create:custom-component`** to scaffold — never manually create component files
-2. **Always register in `mappings.js`** — add the `fd:viewType` to the `customComponents` array in `code/blocks/form/mappings.js`
+2. **Always register in `mappings.js`** — add the `fd:viewType` to the `customComponents` array in `blocks/form/mappings.js` (EDS repo root)
 3. **Always add `fd:viewType`** to the field in `form.json` — this links the field to its custom component
 4. **`decorate()` extends, not replaces** — `fieldDiv` already contains the base field's HTML; modify it, don't rebuild from scratch
 5. **Refer to HTML structures** — use [references/field-html-structure.md](references/field-html-structure.md) to understand the DOM you receive in `decorate()`
@@ -65,7 +65,7 @@ Add a field using the `base_type`'s `fieldType` and `sling:resourceType`, then a
 
 ### 3. Scaffold the component
 
-Run from inside the `code` folder:
+Run from the EDS repo root (`$FORMS_EDS_ROOT`):
 
 ```bash
 npm run create:custom-component -- --name <fd:viewType> --base <base_type>
@@ -81,7 +81,7 @@ This creates three files in `blocks/form/components/<fd:viewType>/`:
 
 ### 4. Register in mappings.js
 
-Add your `fd:viewType` to the `customComponents` array in `code/blocks/form/mappings.js`:
+Add your `fd:viewType` to the `customComponents` array in `blocks/form/mappings.js` (EDS repo root):
 
 ```js
 let customComponents = ['range', 'employer-search', '<fd:viewType>'];
@@ -151,7 +151,7 @@ If you have a running form URL where the component is in use, validate that it l
 |--------|---------|
 | Scaffold component | `npm run create:custom-component -- --name <fd:viewType> --base <base_type>` |
 
-Run from the `code` folder inside the project.
+Run from the EDS repo root (`$FORMS_EDS_ROOT`).
 
 ## Base Types
 

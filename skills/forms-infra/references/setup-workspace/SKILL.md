@@ -1,9 +1,9 @@
 ---
 name: setup-workspace
 description: >
-  Initializes the AEM Forms workspace directory structure, configures AEM and GitHub credentials,
+  Initializes the AEM Forms workspace directory structure, configures AEM credentials,
   verifies system requirements, and performs first-run setup. Creates .env with non-sensitive
-  values collected conversationally and directs users to paste tokens (AEM bearer, GitHub PAT)
+  values collected conversationally and directs users to paste tokens (AEM bearer)
   directly into the .env file to avoid terminal escaping issues.
   Triggers: setup, workspace, initialize, init, configure, credentials, .env, get started,
   new project, first time, set up, create workspace, project setup, environment setup,
@@ -12,61 +12,72 @@ type: skill
 license: Apache-2.0
 metadata:
   author: Adobe
-  version: "0.2"
+  version: "0.3"
 allowed-tools: Read, Write, Edit, Bash
 ---
 
 # Workspace Setup
 
-You help users set up and configure a new AEM Forms workspace through a guided, conversational flow — directory creation, credential collection, system checks, and first sync.
+You help users set up and configure a new AEM Forms workspace through a guided, conversational flow — directory creation, credential collection, system checks, and first-run validation.
 
-> **Token handling:** Bearer tokens and PATs contain characters (`+`, `/`, `=`, etc.) that get mangled when pasted into terminal prompts. **Always** write placeholder lines in `.env` and ask the user to paste tokens directly into the file — never collect tokens through the conversation.
+> **Token handling:** Bearer tokens contain characters (`+`, `/`, `=`, etc.) that get mangled when pasted into terminal prompts. **Always** write placeholder lines in `.env` and ask the user to paste tokens directly into the file — never collect tokens through the conversation.
 
 ## When to Use
 
 - User just installed the plugin and needs to set up a workspace
-- User needs to configure AEM or GitHub credentials
+- User needs to configure AEM credentials
 - User asks "how do I get started?" or "what do I need to set up?"
 - User wants to create a new project from scratch
 - User needs to verify system requirements (Node.js, Python, git)
 - User is troubleshooting credential or connectivity issues
 
-**Do NOT use for:** Building forms, adding rules, syncing code, or any task that assumes the workspace is already set up — use the appropriate skill instead.
+**Do NOT use for:** Building forms, adding rules, or any task that assumes the workspace is already set up — use the appropriate skill instead.
 
 ## Critical Rules
 
-1. **Ask for the workspace name first** — the very first thing you do is ask the user what they want to name their workspace
-2. **Write `FORMS_WORKSPACE` to `.env` immediately after creating the directory** — this is the first line of `.env` and is how every CLI tool finds the workspace
-3. **Collect non-sensitive values conversationally** — ask for URLs, paths, and repo names one at a time in the conversation
-4. **Never collect tokens through the conversation** — for `AEM_TOKEN` and `GITHUB_TOKEN`, write a clearly marked placeholder line in `.env` and tell the user to open the file and paste the value directly. Terminal escaping corrupts tokens.
-5. **Never hardcode credentials** — always write to `.env`; never commit `.env` to version control
-6. **Verify system requirements** — confirm Node.js 18+ and Python 3.10+ are available
-7. **Test credentials after collecting them** — use `eds-code-sync test` to verify AEM and GitHub connectivity
-8. **Accept "skip"** — if the user doesn't have a value yet, write a placeholder comment and move on
+1. **Confirm EDS repo root first** — the very first thing you do is verify the user is in their EDS repo root (check for `package.json` and `blocks/form/` in cwd)
+2. **Workspace name is fixed as `.skills-workspace`** — do not ask the user to choose a name
+3. **Write `FORMS_WORKSPACE` and `FORMS_EDS_ROOT` to `.env` immediately after creating the directory** — these are the first lines of `.env` and are how every CLI tool finds the workspace and the EDS repo
+4. **Collect non-sensitive values conversationally** — ask for URLs and paths one at a time in the conversation
+5. **Never collect tokens through the conversation** — for `AEM_TOKEN`, write a clearly marked placeholder line in `.env` and tell the user to open the file and paste the value directly. Terminal escaping corrupts tokens.
+6. **Never hardcode credentials** — always write to `.env`; never commit `.env` to version control
+7. **Verify system requirements** — confirm Node.js 18+ and Python 3.10+ are available
+8. **Test AEM credentials after collecting them** — use a curl check to verify AEM connectivity
+9. **Accept "skip"** — if the user doesn't have a value yet, write a placeholder comment and move on
 
 ## Interactive Setup Flow
 
 Execute these steps in order. This is a conversation — wait for the user's response after each prompt.
 
-### Step 1: Ask for workspace name
+### Step 1: Confirm EDS repo root
 
-> "What would you like to name your workspace?"
+Check that the current working directory is the EDS repo root:
 
-Accept any reasonable name (e.g. `personal-loan-form`, `my-project`, `acme-onboarding`). This becomes the directory name.
-
-### Step 2: Create workspace in cwd and write FORMS_WORKSPACE to .env
-
-Create the workspace directory **inside the current working directory** — the directory the user already has open in their editor / terminal. Do NOT ask the user where to put it; it always goes in cwd.
-
-```
-mkdir -p <name>/{repo,refs/apis,code/blocks/form/{scripts,api-clients,components},journeys,plans,.agent}
+```bash
+ls package.json blocks/form/ 2>/dev/null
 ```
 
-Then immediately write the absolute path into `<name>/.env` as the first entry:
+If both exist, confirm to the user:
+> "I can see `package.json` and `blocks/form/` — this looks like your EDS repo root. I'll create the workspace here."
+
+If they do NOT exist, ask the user:
+> "Please open your EDS repo root in the terminal (the directory that contains `package.json` and `blocks/form/`) and run this skill again."
+
+### Step 2: Create workspace and write FORMS_WORKSPACE to .env
+
+Create the `.skills-workspace` directory **inside the current working directory** (the EDS repo root):
+
+```bash
+mkdir -p .skills-workspace/{repo,refs/apis,.agent,journeys,plans}
+mkdir -p .claude
+```
+
+Then immediately write the absolute paths into `.skills-workspace/.env` as the first entries:
 
 ```
 # ── Workspace ────────────────────────────────────────────
-FORMS_WORKSPACE=<cwd>/<name>
+FORMS_WORKSPACE=<cwd>/.skills-workspace
+FORMS_EDS_ROOT=<cwd>
 ```
 
 **Then create `CLAUDE.md` in the workspace root.**
@@ -77,7 +88,7 @@ First, resolve the plugin root path:
 echo "${CLAUDE_PLUGIN_ROOT}"
 ```
 
-Then write `<name>/CLAUDE.md` using the resolved path (substitute `<plugin-root>` with the actual value printed above):
+Then write `.skills-workspace/CLAUDE.md` using the resolved path (substitute `<plugin-root>` with the actual value printed above):
 
 ```markdown
 # AEM Forms Workspace
@@ -90,16 +101,15 @@ When working with AEM Forms skills in this workspace, always read skill files fr
 
 ## Session Pre-Flight
 
-At the start of every new session, run this before any form work:
+At the start of every new session, verify AEM connectivity before any form work:
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/skills/forms-infra/scripts/eds-code-sync" test
+source "$FORMS_WORKSPACE/.env" && \
+  curl -sf -o /dev/null -H "Authorization: Bearer $AEM_TOKEN" "${AEM_HOST}/api/assets.json" \
+  && echo "AEM OK" || echo "AEM FAIL — check AEM_HOST and AEM_TOKEN in .env"
 ```
 
-This verifies AEM auth and GitHub access in one shot. Do not proceed until it passes:
-
-- **401 Unauthorized** — AEM bearer token expired. Regenerate from AEM Developer Console → Integrations → Local Token, paste into `.env` as `AEM_TOKEN`.
-- **GitHub error** — token invalid or repo name wrong. Check `GITHUB_TOKEN` and `GITHUB_REPO` in `.env`.
+- **AEM FAIL / 401 Unauthorized** — AEM bearer token expired. Regenerate from AEM Developer Console → Integrations → Local Token, paste into `.env` as `AEM_TOKEN`.
 - **Network error** — wrong `AEM_HOST` or no internet. Verify the URL and connectivity.
 
 Most mid-session failures trace back to a credential problem that was already present at session start but went undetected.
@@ -109,15 +119,15 @@ Most mid-session failures trace back to a credential problem that was already pr
 After the pre-flight passes, verify in order:
 1. Plugin is loaded — run `/reload-plugins` if skills are not responding.
 2. Credentials are filled in — `.env` has no `<paste-...>` placeholder values.
-3. Connectivity passes — `eds-code-sync test` returns success (covered by pre-flight above).
+3. AEM connectivity passes (covered by pre-flight above).
 
 ## Deployment Checklist
 
-Before deploying to AEM, always verify:
+Before deploying EDS code changes, always verify:
 1. Bearer token is valid — regenerate from AEM Developer Console → Integrations → Local Token if you get 401.
-2. Files are placed in the correct directory paths (check `AEM_WRITE_PATHS`).
+2. Files are placed in `blocks/form/` under the EDS repo root (`$FORMS_EDS_ROOT`).
 3. `package-lock.json` is not modified — never commit lockfile changes.
-4. Run `npm run lint` and fix all violations before committing.
+4. Run `npm run lint` in `$FORMS_EDS_ROOT` and fix all violations before committing.
 
 ## Code Style
 
@@ -128,7 +138,7 @@ When implementing form UI components, prefer component-based approaches over dir
 Use `constraintMessages` carefully in `form.json` and validate the schema before writing. For validation rules, test with a small subset first — never apply bulk rules without incremental validation.
 ```
 
-**Then create `<name>/.claude/settings.json` with Claude Code hooks:**
+**Then create `.claude/settings.json` at the EDS repo root with Claude Code hooks:**
 
 ```json
 {
@@ -148,7 +158,7 @@ Use `constraintMessages` carefully in `form.json` and validate the schema before
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'cmd=$(jq -r \".tool_input.command // empty\" <<< \"$CLAUDE_HOOK_INPUT\" 2>/dev/null); if echo \"$cmd\" | grep -q \"git commit\"; then lint_dir=\"$CLAUDE_PROJECT_DIR/code\"; if [ -f \"$lint_dir/package.json\" ]; then cd \"$lint_dir\" && npm run lint || exit 2; fi; fi'"
+            "command": "bash -c 'cmd=$(jq -r \".tool_input.command // empty\" <<< \"$CLAUDE_HOOK_INPUT\" 2>/dev/null); if echo \"$cmd\" | grep -q \"git commit\"; then lint_dir=\"$CLAUDE_PROJECT_DIR\"; if [ -f \"$lint_dir/package.json\" ]; then cd \"$lint_dir\" && npm run lint || exit 2; fi; fi'"
           }
         ]
       }
@@ -159,10 +169,12 @@ Use `constraintMessages` carefully in `form.json` and validate the schema before
 
 These hooks:
 - **Block `package-lock.json` writes** — exits 2 (blocked) if any Write or Edit targets a `package-lock.json` file.
-- **Run lint before `git commit`** — intercepts Bash `git commit` calls, runs `npm run lint` in `code/` if `package.json` exists there, and blocks the commit (exit 2) if lint fails.
+- **Run lint before `git commit`** — intercepts Bash `git commit` calls, runs `npm run lint` in `$CLAUDE_PROJECT_DIR` (the EDS repo root, where `package.json` lives), and blocks the commit (exit 2) if lint fails.
+
+> **Important:** `.claude/settings.json` must be at the EDS repo root (not inside `.skills-workspace/`) so Claude Code picks up the hooks when the user opens the EDS repo.
 
 Confirm to the user:
-> "Created workspace at `<cwd>/<name>`. Now let's configure your credentials."
+> "Created workspace at `<cwd>/.skills-workspace`. Now let's configure your credentials."
 
 **IMPORTANT:** `FORMS_WORKSPACE` must be the first entry in `.env`. Every CLI tool reads this value from `.env` to resolve the workspace directory. All subsequent credentials are appended below it in the same file.
 
@@ -179,29 +191,29 @@ Collect these in two passes: **conversational values** first, then **token place
 | # | Variable | What to ask | Help text |
 |---|----------|-------------|-----------|
 | 1 | `AEM_HOST` | "What is your AEM Author URL?" | Pattern: `https://author-pXXXX-eYYYY.adobeaemcloud.com`. Find it in Cloud Manager → Program → Environment → Author URL. |
-| 2 | `GITHUB_URL` | "What is the full GitHub URL for your EDS repo?" | e.g. `https://github.com/owner/repo` |
-| 3 | `GITHUB_REPO` | "What is the repo in `owner/repo` format?" | e.g. `adobe/my-eds-repo`. You can usually derive this from the URL they just gave. If obvious, auto-fill and confirm. |
-| 4 | `AEM_WRITE_PATHS` | "Which AEM content paths should be writable? (comma-separated)" | e.g. `/content/forms/af/my-team` |
+| 2 | `AEM_WRITE_PATHS` | "Which AEM content paths should be writable? (comma-separated)" | e.g. `/content/forms/af/my-team` |
 
-**Pass 2 — Write placeholders, user pastes directly into `.env`:**
+**Pass 2 — Write placeholder, user pastes directly into `.env`:**
 
 | # | Variable | Placeholder written to `.env` | Instructions to give user |
 |---|----------|-------------------------------|---------------------------|
-| 5 | `AEM_TOKEN` | `AEM_TOKEN=<paste-your-bearer-token-here>` | "Open `.env` in your editor and replace `<paste-your-bearer-token-here>` with your AEM bearer token. Get it from Developer Console → Integrations → Local Token → Get Local Development Token. Tokens expire after 24h." |
-| 6 | `GITHUB_TOKEN` | `GITHUB_TOKEN=<paste-your-github-pat-here>` | "In the same `.env` file, replace `<paste-your-github-pat-here>` with your GitHub personal access token (classic PAT with `repo` scope, starts with `ghp_`). Generate one at github.com/settings/tokens." |
+| 3 | `AEM_TOKEN` | `AEM_TOKEN=<paste-your-bearer-token-here>` | "Open `.env` in your editor and replace `<paste-your-bearer-token-here>` with your AEM bearer token. Get it from Developer Console → Integrations → Local Token → Get Local Development Token. Tokens expire after 24h." |
 
-> **Why not paste tokens in the chat?** Bearer tokens and GitHub PATs contain special characters (`+`, `/`, `=`) that are silently corrupted by terminal escaping when pasted into a conversation prompt. Pasting directly into the `.env` file bypasses the terminal entirely and preserves the token exactly as-is.
+> **Why not paste tokens in the chat?** Bearer tokens contain special characters (`+`, `/`, `=`) that are silently corrupted by terminal escaping when pasted into a conversation prompt. Pasting directly into the `.env` file bypasses the terminal entirely and preserves the token exactly as-is.
 
 After writing the placeholders, tell the user:
-> "I've written your `.env` file with placeholder lines for `AEM_TOKEN` and `GITHUB_TOKEN`. Please open `<workspace>/.env` in your editor and paste the actual values on those lines. Let me know when you're done and I'll test the connection."
+> "I've written your `.env` file with a placeholder line for `AEM_TOKEN`. Please open `.skills-workspace/.env` in your editor and paste the actual value on that line. Let me know when you're done and I'll test the connection."
 
 #### Optional credentials
 
-Offer these but don't require them. Provide a default:
+Offer these but don't require them:
 
 | Variable | Default | What to ask |
 |----------|---------|-------------|
-| `GITHUB_BRANCH` | `main` | "Which branch should I sync from? (default: main)" |
+| `GITHUB_URL` | — | "If you'd like me to open PRs or push over HTTPS, what is the full GitHub URL for your EDS repo? (skip if using SSH or not needed)" |
+| `GITHUB_REPO` | — | "Repo in `owner/repo` format? (optional — can skip)" |
+| `GITHUB_TOKEN` | — | "GitHub PAT for authenticated push or `gh pr create`? (optional — skip if using SSH)" |
+| `GITHUB_BRANCH` | `main` | "Which branch? (default: main)" |
 | `FORM_SYNC_ENV` | `prod` | "Which environment profile? local / stage / prod (default: prod)" |
 
 #### Handling "skip" or "I'll do it later"
@@ -222,33 +234,36 @@ If the user says they use basic auth instead of a bearer token:
 
 ### Step 4: Write `.env`
 
-Append all collected credentials to `<workspace>/.env` (below the `FORMS_WORKSPACE` line written in Step 2). For conversational values, write the actual collected value. For tokens, write the placeholder marker:
+Append all collected credentials to `.skills-workspace/.env` (below the `FORMS_WORKSPACE`/`FORMS_EDS_ROOT` lines written in Step 2). For conversational values, write the actual collected value. For tokens, write the placeholder marker. GitHub vars are written as commented-out optional entries:
 
 ```
 # ── Workspace ────────────────────────────────────────────
-FORMS_WORKSPACE=<absolute-path-to-workspace>
+FORMS_WORKSPACE=<absolute-path>/.skills-workspace
+FORMS_EDS_ROOT=<absolute-path>
 
 # ── AEM Cloud Service ────────────────────────────────────
 AEM_HOST=<collected-value>
 AEM_TOKEN=<paste-your-bearer-token-here>
 
-# ── GitHub EDS Repo ──────────────────────────────────────
-GITHUB_URL=<collected-value>
-GITHUB_REPO=<collected-value>
-GITHUB_TOKEN=<paste-your-github-pat-here>
-GITHUB_BRANCH=<collected-value>
+# ── AEM Write Paths ──────────────────────────────────────
+AEM_WRITE_PATHS=<collected-value>
+
+# ── GitHub (optional — required for authenticated git push over HTTPS or gh pr create) ──
+# GITHUB_URL=<your-eds-repo-url>
+# GITHUB_REPO=<owner/repo>
+# GITHUB_TOKEN=<paste-your-github-pat-here>
+# GITHUB_BRANCH=main
 
 # ── Form Sync ────────────────────────────────────────────
-AEM_WRITE_PATHS=<collected-value>
 FORM_SYNC_ENV=<collected-value>
 ```
 
-After writing the file, tell the user to open it and paste their tokens:
-> "I've saved your `.env` file. Two values need your attention — open `<workspace>/.env` in your editor and replace the placeholder markers for `AEM_TOKEN` and `GITHUB_TOKEN` with your actual tokens. Let me know when you're done."
+After writing the file, tell the user to open it and paste their token:
+> "I've saved your `.env` file. One value needs your attention — open `.skills-workspace/.env` in your editor and replace the placeholder marker for `AEM_TOKEN` with your actual token. Let me know when you're done."
 
 **Never echo secrets back** to the user. Do not read or print token values from `.env` after the user has pasted them.
 
-Wait for the user to confirm they've pasted the tokens before proceeding to Step 5.
+Wait for the user to confirm they've pasted the token before proceeding to Step 5.
 
 ### Step 5: Verify system requirements
 
@@ -262,51 +277,44 @@ git --version
 
 If any are missing, tell the user exactly what to install and from where.
 
-### Step 6: Test connectivity
+### Step 6: Test AEM connectivity
 
 Run from the workspace:
 
-```
-"${CLAUDE_PLUGIN_ROOT}/skills/forms-infra/scripts/eds-code-sync" test
+```bash
+source .skills-workspace/.env && \
+  curl -sf -o /dev/null -H "Authorization: Bearer $AEM_TOKEN" "${AEM_HOST}/api/assets.json" \
+  && echo "AEM OK" || echo "AEM connectivity check failed"
 ```
 
-This verifies both AEM and GitHub access. If it fails:
+If it fails:
 - Identify which credential is wrong from the error message
 - If it's a **token** issue (401/403): tell the user to open `.env` and re-paste the token directly. Do NOT ask them to paste it in the conversation — terminal escaping will corrupt it.
-- If it's a **non-token** issue (wrong URL, repo name, etc.): ask for the corrected value conversationally, update `.env`
+- If it's a **non-token** issue (wrong URL, etc.): ask for the corrected value conversationally, update `.env`
 - Re-test
 
-### Step 7: Sync EDS code
+### Step 7: Add `.skills-workspace` to EDS repo's `.gitignore`
 
-Once connectivity is confirmed, pull the latest EDS form code from the GitHub repo into the workspace's `code/` directory:
+The workspace folder must not be tracked by the EDS repo's git:
 
+```bash
+echo '.skills-workspace' >> .gitignore
 ```
-"${CLAUDE_PLUGIN_ROOT}/skills/forms-infra/scripts/eds-code-sync" sync
-```
-
-This clones the repository configured in `GITHUB_REPO` and maps the relevant EDS form files (blocks, components, custom functions, API clients) into the local `code/` folder using the default file mapping.
-
-> **Important:** The `code/` directory is **not** part of the workspace's own git repository — it is synced from the EDS GitHub repo independently. Do not commit it with the workspace. Add `code/` to the workspace's `.gitignore` if the workspace is version-controlled.
-
-If the sync fails:
-- Verify `GITHUB_REPO` and `GITHUB_TOKEN` are correct in `.env`
-- Re-run `eds-code-sync test` to diagnose
-- Check the file mapping with `eds-code-sync show-mapping`
 
 Confirm to the user:
-> "Synced latest EDS code into `code/`. This folder mirrors your GitHub repo and will stay in sync via `eds-code-sync`."
+> "Added `.skills-workspace` to `.gitignore` so the workspace is not tracked by the EDS repo."
 
 ### Step 8: Confirm and hand off
 
-> "Your workspace is ready at `<path>`. What would you like to build?"
+> "Your workspace is ready at `<cwd>/.skills-workspace`. The EDS repo root is `<cwd>` — all form code changes go directly into `blocks/form/` here. What would you like to build?"
 
 ## System Requirements
 
 | Requirement | Minimum | Why |
 |-------------|---------|-----|
 | Node.js | 18+ | Runs the form validator, rule transformer, and rule save tools |
-| Python | 3.10+ | Runs form sync, API manager, and rule validation |
-| `git` | on PATH | Used by `eds-code-sync` and `git-sandbox` for repo operations |
+| Python | 3.10+ | Runs API manager and rule validation |
+| `git` | on PATH | Version control for EDS code changes in the repo |
 
 > **Note:** The plugin bundles its own Python virtual environment and dependencies — you don't need to install any Python packages yourself. The first time the agent calls a Python-based tool, a venv is created automatically inside the plugin directory.
 
@@ -363,51 +371,53 @@ Restart Claude Code after adding the MCP server in either setup.
 ## Workspace Directory Structure
 
 ```
-<workspace-name>/
-├── .env                           # Credentials (AEM + GitHub) — never commit
-├── CLAUDE.md                      # Claude Code guidance: plugin path, checklists, conventions
+<eds-repo-root>/                   ← EDS GitHub repo (user's working directory)
 ├── .claude/
-│   └── settings.json              # Claude Code hooks: blocks package-lock.json edits, runs lint before git commit
-├── metadata.json                  # Fragment registry (auto-managed)
-├── sandbox.json                   # Git sandbox config (repo URL, branch, allowed paths)
-├── .agent/                        # Agent memory — handover, history, session log
-│   ├── handover.md
-│   ├── history.md
-│   └── sessions.md
-├── repo/
-│   └── content/forms/af/         # Mirrors AEM content path — pulled forms land here
-│       └── <team>/<app>/
-│           └── <form>/
-│               ├── <form>.form.json
-│               └── <form>.rule.json
-├── refs/
-│   ├── metadata.json             # Fragment registry
-│   ├── apis/                     # OpenAPI 3.0 YAML specs and generated clients
-│   └── <fragment>.form.json      # Fragment content (read-only references)
-├── code/
-│   └── blocks/form/              # EDS project code (synced from GitHub via git-sandbox)
-│       ├── scripts/              # Custom functions (form-level, fragment, shared libs)
-│       ├── api-clients/          # Deployed API client JS files
-│       └── components/           # Custom component definitions
-├── journeys/
-│   └── <journey>.md              # Requirement docs & user stories (input)
-└── plans/
-    └── <journey>/                # Execution plans generated from journeys
-        ├── 01-form-structure.md
-        ├── 02-business-rules.md
-        └── ...
+│   └── settings.json              ← Claude Code hooks: blocks package-lock.json edits, runs lint before git commit
+├── .gitignore                     ← must contain .skills-workspace
+├── blocks/form/                   ← Edit EDS form code directly here
+│   ├── functions.js
+│   ├── mappings.js
+│   ├── scripts/
+│   ├── api-clients/
+│   └── components/
+├── package.json
+└── .skills-workspace/             ← agent workspace (gitignored from EDS repo)
+    ├── .env                       ← FORMS_WORKSPACE + FORMS_EDS_ROOT + AEM creds
+    ├── CLAUDE.md                  ← Claude Code guidance: plugin path, checklists, conventions
+    ├── .agent/                    ← Agent memory — handover, history, session log
+    │   ├── handover.md
+    │   ├── history.md
+    │   └── sessions.md
+    ├── repo/
+    │   └── content/forms/af/      ← Mirrors AEM content path — pulled forms land here
+    │       └── <team>/<app>/
+    │           └── <form>/
+    │               ├── <form>.form.json
+    │               └── <form>.rule.json
+    ├── refs/
+    │   ├── metadata.json          ← Fragment registry
+    │   ├── apis/                  ← OpenAPI 3.0 YAML specs and generated clients
+    │   └── <fragment>.form.json   ← Fragment content (read-only references)
+    ├── journeys/
+    │   └── <journey>.md           ← Requirement docs & user stories (input)
+    └── plans/
+        └── <journey>/             ← Execution plans generated from journeys
+            ├── 01-form-structure.md
+            ├── 02-business-rules.md
+            └── ...
 ```
 
 ### What each directory is for
 
 | Directory | Purpose |
 |-----------|---------|
-| `repo/` | Mirrors AEM Author content structure; forms are pulled here under their AEM content path |
-| `refs/` | Read-only references — fragments, API specs, and generated API clients (staging area) |
-| `code/` | Mirrors your EDS GitHub repo; contains blocks, custom functions, API clients, and components |
-| `journeys/` | Input requirement documents and user stories that describe what the form should do |
-| `plans/` | Sequentially ordered execution plans generated by analyzing journeys |
-| `.agent/` | Agent memory — handover state, history, and session log for continuity across sessions |
+| `blocks/form/` | EDS form code — edit directly in the EDS repo (scripts, api-clients, components) |
+| `.skills-workspace/repo/` | Mirrors AEM Author content structure; forms are pulled here under their AEM content path |
+| `.skills-workspace/refs/` | Read-only references — fragments, API specs, and generated API clients (staging area) |
+| `.skills-workspace/journeys/` | Input requirement documents and user stories that describe what the form should do |
+| `.skills-workspace/plans/` | Sequentially ordered execution plans generated by analyzing journeys |
+| `.skills-workspace/.agent/` | Agent memory — handover state, history, and session log for continuity across sessions |
 
 ## Workspace Resolution
 
@@ -419,22 +429,23 @@ All CLI tools shipped with the plugin auto-resolve the workspace directory by re
 2. **`FORMS_WORKSPACE` read from `.env` in cwd** — written during this setup flow
 3. **Fall back to cwd** — backwards-compatible default
 
-> **Key point:** `FORMS_WORKSPACE` must be the first entry in `.env`. This is how every tool — `api-manager`, `eds-code-sync`, `git-sandbox`, etc. — knows where to find the workspace and all its files.
+> **Key point:** `FORMS_WORKSPACE` must be the first entry in `.env`. This is how every tool — `api-manager`, etc. — knows where to find the workspace and all its files. `FORMS_EDS_ROOT` points to the EDS repo root where EDS code lives.
 
 ## Environment Variable Reference
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `FORMS_WORKSPACE` | Yes (auto) | Absolute path to workspace root — first line of `.env`, written during setup, read by all tools |
+| `FORMS_WORKSPACE` | Yes (auto) | Absolute path to `.skills-workspace/` root — first line of `.env`, written during setup, read by all tools |
+| `FORMS_EDS_ROOT` | Yes (auto) | Absolute path to EDS repo root — parent of `.skills-workspace/`; all EDS code (`blocks/form/`) lives here |
 | `AEM_HOST` | Yes | AEM Cloud Service Author URL |
 | `AEM_TOKEN` | Yes* | Bearer token from AEM Developer Console |
 | `AEM_USERNAME` | Yes* | Basic auth username (alternative to token) |
 | `AEM_PASSWORD` | Yes* | Basic auth password (alternative to token) |
-| `GITHUB_URL` | Yes | Full GitHub URL for the EDS repo |
 | `AEM_WRITE_PATHS` | Yes | Comma-separated AEM paths allowed for push |
-| `GITHUB_REPO` | Yes | Repository in `owner/repo` format |
-| `GITHUB_TOKEN` | Yes | Classic personal access token with `repo` scope (starts with `ghp_`) |
-| `GITHUB_BRANCH` | No | Branch to sync from (default: `main`) |
+| `GITHUB_URL` | No | Full GitHub URL for the EDS repo (required for authenticated git push over HTTPS or `gh pr create`) |
+| `GITHUB_REPO` | No | Repository in `owner/repo` format (optional) |
+| `GITHUB_TOKEN` | No | Classic personal access token with `repo` scope — required for authenticated git push over HTTPS or `gh pr create` |
+| `GITHUB_BRANCH` | No | Branch to work from (default: `main`) |
 | `FORM_SYNC_ENV` | No | Environment profile — `local`, `stage`, or `prod` (default: `prod`) |
 | `UE_SERVICE_URL` | No | Universal Editor Service URL |
 | `UE_BEARER_TOKEN` | No | Universal Editor token (if static) |
@@ -448,10 +459,8 @@ All CLI tools shipped with the plugin auto-resolve the workspace directory by re
 
 | Tool | Location | Purpose |
 |------|----------|---------|
-| `eds-code-sync` | `skills/sync-eds-code/scripts/` | Sync EDS code between GitHub and local via git |
-| `api-manager` | `scripts/` (shared) | Manage API definitions, generate typed JS clients |
+| `api-manager` | `skills/forms-shared/scripts/` | Manage API definitions, generate typed JS clients |
 | `form-validate` | `skills/forms-content-author/scripts/` | Validate form.json against EDS field schemas |
-| `git-sandbox` | `skills/git-sandbox/scripts/` | Sandboxed git operations for AI agents |
 | `forms-content-author` | `skills/forms-content-author/scripts/` | Scaffold empty form JSON from template |
 | `rule-transform` | `scripts/` (shared) | Transform form JSON for rule editing |
 | `rule-validate` | `scripts/` (shared) | Validate rule JSON against grammar |
@@ -466,15 +475,14 @@ All CLI tools shipped with the plugin auto-resolve the workspace directory by re
 | `node: command not found` | Node.js not installed | Install Node.js 18+ from [nodejs.org](https://nodejs.org) |
 | `python3: command not found` | Python not installed | Install Python 3.10+ from [python.org](https://python.org) |
 | `AEM_HOST not set` | Missing `.env` or missing variable | Re-run setup or manually add `AEM_HOST` to `.env` |
-| Tool reads wrong `.env` | `FORMS_WORKSPACE` missing from `.env` | Add `FORMS_WORKSPACE=/absolute/path/to/workspace` as the first line of your workspace's `.env` |
-| Tool writes files in wrong directory | `FORMS_WORKSPACE` missing from `.env` | Add `FORMS_WORKSPACE=/absolute/path/to/workspace` as the first line of your workspace's `.env` |
+| Tool reads wrong `.env` | `FORMS_WORKSPACE` missing from `.env` | Add `FORMS_WORKSPACE=/absolute/path/.skills-workspace` as the first line of `.env` |
+| Tool writes files in wrong directory | `FORMS_WORKSPACE` missing from `.env` | Add `FORMS_WORKSPACE=/absolute/path/.skills-workspace` as the first line of `.env` |
 | `401 Unauthorized` from AEM | Token expired or invalid | Regenerate bearer token from AEM Developer Console |
 | `403 Forbidden` on push | Path not in allowlist | Add the AEM path to `AEM_WRITE_PATHS` in `.env` |
-| `eds-code-sync test` fails for GitHub | Bad token or wrong repo | Verify `GITHUB_TOKEN` has `repo` scope and `GITHUB_REPO` is correct |
 | Python venv errors | Corrupted venv | Delete the venv directory inside the plugin and retry (it auto-recreates) |
-| `sandbox.json` not found | Missing config | Create `sandbox.json` in workspace root — run `git-sandbox example-config` for a starter |
 | Form not found via MCP | Wrong JCR path | Use `get-aem-pages(publishPath: "<path>")` to discover the correct pageId first |
-| `.env` committed to git | Security risk | Add `.env` to `.gitignore` immediately; rotate all exposed credentials |
+| `.env` committed to git | Security risk | Add `.env` to `.skills-workspace/.gitignore` immediately; rotate all exposed credentials |
+| Hooks not firing | `.claude/settings.json` in wrong location | Make sure `.claude/settings.json` is at the EDS repo root, not inside `.skills-workspace/` |
 
 ## Headless Workspace Validation
 
@@ -483,8 +491,8 @@ To validate an already-configured workspace non-interactively (e.g. from a CI sc
 ```bash
 claude -p "Validate my AEM EDS Forms workspace. Check:
 1. The aem-forms plugin is installed — list all available skills.
-2. The .env file exists and has non-placeholder values for AEM_HOST, AEM_TOKEN, GITHUB_URL, GITHUB_REPO, GITHUB_TOKEN.
-3. Run '\${CLAUDE_PLUGIN_ROOT}/skills/forms-infra/scripts/eds-code-sync' test to verify AEM and GitHub connectivity.
+2. The .env file exists and has non-placeholder values for AEM_HOST and AEM_TOKEN.
+3. Run an AEM connectivity check: source .skills-workspace/.env && curl -sf -o /dev/null -H \"Authorization: Bearer \$AEM_TOKEN\" \"\${AEM_HOST}/api/assets.json\" && echo AEM OK.
 Report a status table with columns: Check | Status (PASS/FAIL) | Action needed." \
   --allowedTools "Read,Bash,Glob,Grep"
 ```

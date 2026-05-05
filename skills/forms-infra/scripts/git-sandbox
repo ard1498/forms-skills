@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-set -e
-PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SHARED_SCRIPTS="$(cd "$PLUGIN_ROOT/../forms-shared/scripts" && pwd)"
-source "$SHARED_SCRIPTS/_resolve-workspace"
-cd "$FORMS_WORKSPACE"
-exec "$SHARED_SCRIPTS/python3" -m git_sandbox.cli "$@"

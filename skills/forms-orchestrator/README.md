@@ -83,7 +83,7 @@ You don't need to memorize this — just start talking to the agent. The orchest
 | `content-author` | Form structure & components via Sites Content MCP | `forms-custom-components` (+ `forms-content-update`, `forms-content-generate` internally) |
 | `rule-creator` | Business rules & custom functions | `forms-rule-creator` |
 | `integration` | APIs & data | `manage-apis` |
-| `infra` | Setup, sync, deploy | `setup-workspace`, `sync-eds-code`, `git-sandbox` |
+| `infra` | Workspace setup | `setup-workspace` |
 | `context-management` | Agent memory & session continuity | `manage-context` |
 
 ### Plan Types
@@ -111,8 +111,8 @@ Everything you need to install the plugin, set up a workspace, and start buildin
 | Requirement | Why |
 |-------------|-----|
 | Node.js 18+ | Runs the form validator, rule transformer, and rule save tools |
-| Python 3.10+ | Runs form sync, API manager, and rule validation (deps managed by the plugin) |
-| `git` on PATH | Used by `eds-code-sync` and `git-sandbox` for repo operations |
+| Python 3.10+ | Runs API manager and rule validation (deps managed by the plugin) |
+| `git` on PATH | Version control for EDS code changes in the repo |
 
 The plugin bundles its own Python virtual environment — you don't install any Python packages yourself.
 
@@ -270,9 +270,7 @@ forms-skills/                            # repo root — aem-forms plugin
     │   └── references/
     ├── forms-infra/                     # Infra domain
     │   └── references/
-    │       ├── setup-workspace/
-    │       ├── sync-eds-code/
-    │       └── git-sandbox/
+    │       └── setup-workspace/
     ├── forms-integration/               # Integration domain
     │   └── references/
     │       └── manage-apis/
@@ -282,8 +280,6 @@ forms-skills/                            # repo root — aem-forms plugin
     └── forms-shared/                    # Shared scripts
         └── scripts/
             ├── api-manager
-            ├── eds-code-sync
-            ├── git-sandbox
             └── api_manager/
 ```
 
@@ -320,8 +316,6 @@ Pre-built Node.js bundles — no `npm install` at runtime.
 
 | Tool | Skill | Language |
 |------|-------|----------|
-| `eds-code-sync` | `forms-infra/scripts/eds-code-sync` | Python |
-| `git-sandbox` | `forms-infra/scripts/git-sandbox` | Python |
 | `api-skill` | `forms-integration/references/manage-apis/scripts/` | Python |
 
 ## Adding a New Skill

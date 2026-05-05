@@ -32,7 +32,7 @@ The **forms-orchestrator** routes intents through a 6-step algorithm — it gene
 | `content-author` | `forms-custom-components` (+ `forms-content-update`, `forms-content-generate` internally) |
 | `rule-creator` | `forms-rule-creator` |
 | `integration` | `manage-apis` |
-| `infra` | `setup-workspace`, `sync-eds-code`, `git-sandbox` |
+| `infra` | `setup-workspace` |
 | `context-management` | `manage-context` |
 
 **Requirements:** Node.js 18+, `git` on PATH.
@@ -55,7 +55,7 @@ forms-skills/
 │   ├── forms-infra/                    ← infra domain
 │   ├── forms-integration/              ← integration domain
 │   ├── forms-context-management/       ← context & session domain
-│   └── forms-shared/                   ← shared scripts (api-manager, eds-code-sync, etc.)
+│   └── forms-shared/                   ← shared scripts (api-manager, etc.)
 └── README.md
 ```
 

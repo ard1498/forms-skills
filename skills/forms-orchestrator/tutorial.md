@@ -27,13 +27,15 @@ Claude will create the workspace directory, collect your AEM and GitHub credenti
 Once setup completes you'll have a workspace like:
 
 ```
-contact-form/
-├── .env                  ← your credentials
-├── CLAUDE.md             ← guidance for Claude in this workspace
-├── repo/                 ← pulled forms land here
-├── code/                 ← your EDS project code
-├── refs/                 ← fragment references and API specs
-└── plans/                ← generated execution plans
+<eds-repo-root>/
+├── .claude/settings.json ← hooks
+├── blocks/form/          ← your EDS form code lives here directly
+└── .skills-workspace/    ← agent workspace (gitignored)
+    ├── .env              ← your credentials
+    ├── CLAUDE.md         ← guidance for Claude in this workspace
+    ├── repo/             ← pulled forms land here
+    ├── refs/             ← fragment references and API specs
+    └── plans/            ← generated execution plans
 ```
 
 ---

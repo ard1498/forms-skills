@@ -347,7 +347,7 @@ All non-OOTB components used on this screen. Link to each component's README for
 
 | Component | Type | Used For | Documentation |
 |-----------|------|----------|---------------|
-| `componentName` | custom / decorator | Which field(s) use it | [README](code/blocks/form/components/<name>/README.md) |
+| `componentName` | custom / decorator | Which field(s) use it | [README](blocks/form/components/<name>/README.md) |
 
 ---
 

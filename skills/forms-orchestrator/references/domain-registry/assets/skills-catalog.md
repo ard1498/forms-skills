@@ -7,7 +7,7 @@ description: >
 
 # Skills Catalog
 
-All 12 skills across 6 domains.
+All 9 skills across 6 domains.
 
 | # | Domain | Skill | Purpose | Triggers |
 |---|--------|-------|---------|----------|
@@ -19,9 +19,7 @@ All 12 skills across 6 domains.
 | 6 | `rule-creator` | `forms-rule-creator` | Add business rules (show/hide, validate, navigate, calculate, events) | add rule, show hide, validation, visibility, calculate |
 | 7 | `integration` | `manage-apis` | Add API definitions, build JS clients from cURL | API, OpenAPI, cURL, api client |
 | 8 | `infra` | `setup-workspace` | Initialize project, configure credentials | setup, workspace, credentials, initialize |
-| 9 | `infra` | `sync-eds-code` | Pull / push EDS code, branch, open PR on GitHub | push code, pull code, git push, PR |
-| 10 | `infra` | `git-sandbox` | Sandboxed git operations (commit, push, reset) | git commit, git reset, git status |
-| 11 | `context-management` | `manage-context` | Update project reports, save progress, session log | save progress, update reports, handover, session |
+| 9 | `context-management` | `manage-context` | Update project reports, save progress, session log | save progress, update reports, handover, session |
 
 ---
 
@@ -31,7 +29,7 @@ When the orchestrator uses direct domain routing, use this table. First match wi
 
 | User Intent Pattern | Domain | Typical Skills Invoked |
 |---------------------|--------|------------------------|
-| Setup, credentials, sync code, git operations, deploy | `infra` | `setup-workspace`, `sync-eds-code`, `git-sandbox` |
+| Setup, credentials, workspace initialization | `infra` | `setup-workspace` |
 | Analyze requirements, document screens, review docs, migrate v1 | `analysis` | `analyze-requirements`, `create-screen-doc`, `analyze-v1-form`, `jud-to-screen` |
 | Create form, add/modify/delete fields, panels, fragments, form content | `content-author` | `forms-content-author` (routes internally to `forms-content-update`, `forms-content-generate`, `forms-rule-creator`) |
 | Add rules, show/hide, validate, calculate, events | `rule-creator` | `forms-rule-creator` |

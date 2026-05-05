@@ -16,7 +16,7 @@ User Intent
                    │ workspace exists
                    ▼
 ┌────────────────────────────────────────┐
-│  Step 1.5: Pre-Flight Check             │──→ eds-code-sync test (skip if mid-execution)
+│  Step 1.5: Pre-Flight Check             │──→ AEM connectivity check (skip if mid-execution)
 └──────────────────┬─────────────────────┘
                    │ connectivity OK
                    ▼
@@ -68,14 +68,16 @@ User Intent
 Run:
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/skills/forms-infra/scripts/eds-code-sync" test
+source .skills-workspace/.env && \
+  curl -sf -o /dev/null -H "Authorization: Bearer $AEM_TOKEN" "${AEM_HOST}/api/assets.json" \
+  && echo "AEM OK" || echo "AEM FAIL"
 ```
 
 | Result | Action |
 |--------|--------|
-| ✅ Passes | Proceed to Step 2 |
+| ✅ Passes (`AEM OK`) | Proceed to Step 2 |
 | ❌ 401 Unauthorized | Tell user: "Your AEM bearer token has expired. Regenerate from AEM Developer Console → Integrations → Local Token, paste into `.env` as `AEM_TOKEN`, and let me know when done." Wait — do not proceed. |
-| ❌ Other failure | Diagnose from error output (wrong host, bad GitHub token, network unreachable). Report with specific action required. Do not proceed until resolved. |
+| ❌ Other failure | Diagnose from error output (wrong host, network unreachable). Report with specific action required. Do not proceed until resolved. |
 
 > Front-loading this check prevents wasted work when credentials expire between sessions — a common failure mode.
 
@@ -235,11 +237,18 @@ After each plan completes, present the user with these options. All local change
 | **4. Proceed to next plan** | ❌ | ❌ | Skip both, start next plan immediately |
 
 **When deploying (option 1):**
-1. **EDS code first** — If any files in the `code/` directory were created or modified:
-   1. **Validate** — Run `eds-code-sync validate` to verify the changes pass `npm install` and `npm run lint`. The local `code/` directory does not contain `package.json` — the validate command clones the repo, applies changes, and runs checks automatically. If validation fails, fix the issues in `code/` and re-run validate.
-   2. **Push** — Push them to GitHub with `eds-code-sync push --branch <branch-name> --pr`.
+1. **EDS code first** — If any files in `blocks/form/` were created or modified:
+   1. **Validate** — Run `npm run lint` in `$FORMS_EDS_ROOT` to verify the changes pass lint. Fix any violations before continuing.
+   2. **Commit and push:**
+      ```bash
+      git checkout -b <branch-name>
+      git add blocks/form/
+      git commit -m "<message>"
+      git push origin <branch-name>
+      ```
+      Then open a PR on GitHub (provide the URL or use `gh pr create` if the `gh` CLI is available).
    3. **Wait for merge** — Ask the user to review and merge the PR.
-   4. **Re-sync** — Once the user confirms the merge, run `eds-code-sync sync` to re-sync the local `code/` directory with the merged main branch before proceeding.
+   4. **Pull latest** — Once the user confirms the merge, run `git checkout main && git pull` in `$FORMS_EDS_ROOT`.
 2. **AEM form content** is now authored directly through `forms-content-author` via the Sites Content MCP server — there is no separate deploy step for form content.
 
 **When updating reports (options 1, 2, 3):** Route to `context-management` → `manage-context` to update `.agent/handover.md`, `.agent/history.md`, and `.agent/sessions.md`.

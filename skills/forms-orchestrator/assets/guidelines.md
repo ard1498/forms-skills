@@ -11,7 +11,6 @@ CLI tools are distributed across domain modules. When referencing any script fro
 ```
 "${CLAUDE_PLUGIN_ROOT}/skills/forms-shared/scripts/<tool-name>" <args>
 "${CLAUDE_PLUGIN_ROOT}/skills/forms-rule-creator/scripts/<tool-name>" <args>
-"${CLAUDE_PLUGIN_ROOT}/skills/forms-infra/scripts/<tool-name>" <args>
 ```
 
 ### Rules
@@ -19,7 +18,7 @@ CLI tools are distributed across domain modules. When referencing any script fro
 | # | Rule |
 |---|------|
 | 1 | **Always use `${CLAUDE_PLUGIN_ROOT}`** — never construct paths from the skill's own base directory. The base directory injected by Claude Code (e.g., `Base directory for this skill: /path/to/...`) is for resolving skill-local assets (`assets/`, `references/`), **not** for locating scripts. |
-| 2 | **Always include the module name** — the plugin root (`${CLAUDE_PLUGIN_ROOT}`) is the directory containing `.claude-plugin/`. Scripts live in the owning module: `skills/forms-shared/scripts/`, `skills/forms-rule-creator/scripts/`, `skills/forms-infra/scripts/`. |
+| 2 | **Always include the module name** — the plugin root (`${CLAUDE_PLUGIN_ROOT}`) is the directory containing `.claude-plugin/`. Scripts live in the owning module: `skills/forms-shared/scripts/`, `skills/forms-rule-creator/scripts/`. |
 | 3 | **Never hardcode absolute paths** — no `/Users/...` paths in SKILL.md files. Use `${CLAUDE_PLUGIN_ROOT}` for plugin-relative paths and `<cwd>/<name>` style placeholders for documentation examples. |
 | 4 | **Skill-local assets use relative paths** — files within a skill's own directory tree (e.g., `assets/plan-template.md`, `references/grammar-reference.md`) should be referenced with relative paths from the SKILL.md, not with `${CLAUDE_PLUGIN_ROOT}`. |
 
@@ -27,14 +26,12 @@ CLI tools are distributed across domain modules. When referencing any script fro
 
 | Script | Full Path |
 |--------|-----------|
-| `eds-code-sync` | `${CLAUDE_PLUGIN_ROOT}/skills/forms-infra/scripts/eds-code-sync` |
+| `api-manager` | `${CLAUDE_PLUGIN_ROOT}/skills/forms-shared/scripts/api-manager` |
 | `rule-transform` | `${CLAUDE_PLUGIN_ROOT}/skills/forms-rule-creator/scripts/rule-transform` |
 | `rule-validate` | `${CLAUDE_PLUGIN_ROOT}/skills/forms-rule-creator/scripts/rule-validate` |
 | `rule-save` | `${CLAUDE_PLUGIN_ROOT}/skills/forms-rule-creator/scripts/rule-save` |
 | `rule-grammar` | `${CLAUDE_PLUGIN_ROOT}/skills/forms-rule-creator/scripts/rule-grammar` |
 | `parse-functions` | `${CLAUDE_PLUGIN_ROOT}/skills/forms-rule-creator/scripts/parse-functions` |
-| `api-manager` | `${CLAUDE_PLUGIN_ROOT}/skills/forms-shared/scripts/api-manager` |
-| `git-sandbox` | `${CLAUDE_PLUGIN_ROOT}/skills/forms-infra/scripts/git-sandbox` |
 
 ---
 
@@ -55,7 +52,7 @@ Before any routing occurs, verify the workspace exists.
 
 ## Workspace Resolution
 
-All CLI tools auto-resolve the workspace directory before running. Every tool sources `scripts/_resolve-workspace` which ensures `.env`, `metadata.json`, `sandbox.json`, and all workspace directories are found correctly.
+All CLI tools auto-resolve the workspace directory before running. Every tool sources `scripts/_resolve-workspace` which ensures `.env`, `metadata.json`, and all workspace directories are found correctly.
 
 **Resolution order (first match wins):**
 
@@ -111,9 +108,8 @@ When all plans for a journey show ✅ Done:
 
 | File | Managed By | Purpose |
 |------|------------|---------|
-| `.env` | `setup-workspace` | `FORMS_WORKSPACE` path + AEM/GitHub credentials — never commit |
+| `.env` | `setup-workspace` | `FORMS_WORKSPACE` + `FORMS_EDS_ROOT` + AEM credentials — never commit |
 | `metadata.json` | `setup-workspace` | Tracks workspace metadata (forms paths, AEM config) |
-| `sandbox.json` | `git-sandbox` | Restricts allowed commit paths and push branch names |
 
 ---
 
@@ -138,13 +134,13 @@ When all plans for a journey show ✅ Done:
 |------|-------|
 | Forms | `repo/content/forms/af/<team>/<path>/<name>.form.json` |
 | Rule stores | `repo/content/forms/af/<team>/<path>/<name>.rule.json` |
-| Fragment scripts | `code/blocks/form/scripts/fragment/<fragment>.js` |
-| Form-level scripts | `code/blocks/form/scripts/form/<form>.js` |
-| Shared libraries | `code/blocks/form/scripts/script-libs/libs.js` |
-| API clients (live) | `code/blocks/form/api-clients/` |
+| Fragment scripts | `blocks/form/scripts/fragment/<fragment>.js` (in `$FORMS_EDS_ROOT`) |
+| Form-level scripts | `blocks/form/scripts/form/<form>.js` (in `$FORMS_EDS_ROOT`) |
+| Shared libraries | `blocks/form/scripts/script-libs/libs.js` (in `$FORMS_EDS_ROOT`) |
+| API clients (live) | `blocks/form/api-clients/` (in `$FORMS_EDS_ROOT`) |
 | API clients (staging) | `refs/apis/api-clients/` |
 | API definitions | `refs/apis/` |
 | Screen docs | `journeys/<journey>/screens/<screen>/Screen.md` |
-| Custom components | `code/components/<view-type>/` |
+| Custom components | `blocks/form/components/<view-type>/` (in `$FORMS_EDS_ROOT`) |
 | Plans | `plans/<journey>/NN-<title>.md` |
 | Agent memory | `.agent/handover.md`, `.agent/history.md`, `.agent/sessions.md` |
