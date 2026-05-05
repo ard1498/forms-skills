@@ -45,6 +45,7 @@ Thumbs.db
 # ── Temporary Files ──────────────────────────────────────
 drafts/tmp/
 
-docs/
+# docs/
 .claude/
 .scratchpad/
+.worktrees/
