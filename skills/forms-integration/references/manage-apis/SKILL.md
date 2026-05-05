@@ -32,7 +32,7 @@ Manages API integrations for AEM Forms using OpenAPI 3.0 specifications and the 
 
 1. **Always use `globals.functions.request()`** — NEVER use `fetch()` directly in AEM Forms
 2. **Always `--dry-run` first** — run `build --dry-run` or `sync --dry-run` before actual execution
-3. **Staging-then-copy workflow** — generated clients go to `refs/apis/api-clients/` (staging), user manually copies needed clients to `code/blocks/form/api-clients/`
+3. **Staging-then-copy workflow** — generated clients go to `refs/apis/api-clients/` (staging), user manually copies needed clients to `blocks/form/api-clients/` (in `$FORMS_EDS_ROOT`)
 4. **Never fabricate API names or endpoints** — always discover via `list` / `show` or sync from AEM
 5. **CLI-first** — always use the `api-manager` CLI for all API operations; do not hand-edit generated files
 
@@ -63,7 +63,7 @@ The `sync` command requires environment variables `AEM_HOST` and `AEM_TOKEN` to 
 3. **Build** — `build --dry-run` first, then `build` to generate JS clients
 4. **Compare** — diff staging vs code to see what changed:
    ```
-   diff -rq refs/apis/api-clients/ code/blocks/form/api-clients/
+   diff -rq "$FORMS_WORKSPACE/refs/apis/api-clients/" "$FORMS_EDS_ROOT/blocks/form/api-clients/"
    ```
 5. **Deploy** — copy needed clients from staging to code directory
 
@@ -203,7 +203,7 @@ refs/apis/                        # Source of truth (OpenAPI 3.0 YAML)
     ├── api-clients/*.js          # Generated JavaScript clients (staging)
     └── registry.json             # API registry
 
-code/blocks/form/api-clients/     # Deployed clients (copied from staging)
+<eds-repo-root>/blocks/form/api-clients/     # Deployed clients (copied from staging)
 └── *.js
 ```
 

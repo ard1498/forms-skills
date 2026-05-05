@@ -63,7 +63,7 @@ Guard policies are constraints that apply across all skills in this domain. They
 
 > **no-guessing-endpoints:** Never guess API endpoints or service URLs. Mark any unknowns as `TBD` and ask the user for the correct value.
 
-> **staging-before-live:** API client files must be generated into the staging path (`refs/apis/api-clients/`) first, then promoted to the live path (`code/blocks/form/api-clients/`) only after validation.
+> **staging-before-live:** API client files must be generated into the staging path (`refs/apis/api-clients/`) first, then promoted to the live path (`blocks/form/api-clients/`) only after validation.
 
 ---
 
@@ -73,7 +73,7 @@ Canonical paths for assets managed by skills in this domain.
 
 | Asset | Path |
 |-------|------|
-| API clients (live) | `code/blocks/form/api-clients/` |
+| API clients (live) | `blocks/form/api-clients/` (in `$FORMS_EDS_ROOT`) |
 | API clients (staging) | `refs/apis/api-clients/` |
 | API definitions | `refs/apis/` |
 

@@ -57,14 +57,13 @@ The template defines these required sections in order:
 
 ## Script References in SKILL.md
 
-When a skill needs to invoke a CLI tool (e.g., `eds-code-sync`, `rule-validate`, `api-skill`), follow these rules:
+When a skill needs to invoke a CLI tool (e.g., `api-manager`, `rule-validate`, `api-skill`), follow these rules:
 
 ### Always use `${CLAUDE_PLUGIN_ROOT}`
 
 ```
 "${CLAUDE_PLUGIN_ROOT}/skills/forms-shared/scripts/<tool-name>" <args>
 "${CLAUDE_PLUGIN_ROOT}/skills/forms-rule-creator/scripts/<tool-name>" <args>
-"${CLAUDE_PLUGIN_ROOT}/skills/forms-infra/scripts/<tool-name>" <args>
 ```
 
 ### Rules
@@ -79,15 +78,15 @@ When a skill needs to invoke a CLI tool (e.g., `eds-code-sync`, `rule-validate`,
 ### Example
 
 ```
-# ✅ Correct — uses CLAUDE_PLUGIN_ROOT with forms-orchestrator segment
-"${CLAUDE_PLUGIN_ROOT}/skills/forms-infra/scripts/eds-code-sync" sync
+# ✅ Correct — uses CLAUDE_PLUGIN_ROOT with module segment
+"${CLAUDE_PLUGIN_ROOT}/skills/forms-shared/scripts/api-manager" list
 
-# ❌ Wrong — missing forms-orchestrator segment
-"${CLAUDE_PLUGIN_ROOT}/scripts/eds-code-sync" sync
+# ❌ Wrong — missing module segment
+"${CLAUDE_PLUGIN_ROOT}/scripts/api-manager" list
 
 # ❌ Wrong — hardcoded absolute path
-"/Users/alice/forms-skills/skills/aem/forms/forms-infra/scripts/eds-code-sync" sync
+"/Users/alice/forms-skills/skills/forms-shared/scripts/api-manager" list
 
 # ❌ Wrong — relative path from skill base directory
-"../../../../../../scripts/eds-code-sync" sync
+"../../../../../../scripts/api-manager" list
 ```

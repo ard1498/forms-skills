@@ -109,7 +109,7 @@ If any field returns `found: false`: stop and ask the user to confirm the field 
 
 - Load `assets/agent-kb/12-custom-functions-authoring.md` + `assets/agent-kb/13-custom-function-helper-apis.md`
 - Write the function following the JSDoc pattern defined there
-- Store the function in `code/blocks/form/functions.js` — this is the only file AEM discovers custom functions from
+- Store the function in `blocks/form/functions.js` (EDS repo root, i.e. `$FORMS_EDS_ROOT/blocks/form/functions.js`) — this is the only file AEM discovers custom functions from
 - Re-run `parse-functions.bundle.js` on the updated file
 - Re-save `/tmp/customFunctions.json`
 

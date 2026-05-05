@@ -16,8 +16,6 @@
     "./skills/forms-content-author/references/forms-custom-components",
     "./skills/forms-rule-creator",
     "./skills/forms-infra/references/setup-workspace",
-    "./skills/forms-infra/references/sync-eds-code",
-    "./skills/forms-infra/references/git-sandbox",
     "./skills/forms-integration/references/manage-apis",
     "./skills/forms-context-management/references/manage-context"
   ],

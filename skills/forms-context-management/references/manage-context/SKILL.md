@@ -214,7 +214,7 @@ When **all plans** for a journey show status ✅ Done:
 |----------|------|
 | Form JSON | `repo/content/forms/af/<team>/<path>/<name>.form.json` |
 | Rule store | `repo/content/forms/af/<team>/<path>/<name>.rule.json` |
-| Form script | `code/blocks/form/scripts/form/<name>.js` |
+| Form script | `blocks/form/scripts/form/<name>.js` (EDS repo root) |
 | Screen docs | `journeys/<journey>/screens/*/Screen.md` |
 
 ### Lessons / Notes

@@ -1,25 +1,23 @@
 ---
 name: forms-infra
 description: >
-  Domain router for infrastructure skills — workspace setup, EDS code sync,
-  and sandboxed git operations.
+  Domain router for infrastructure skills — workspace setup.
 type: domain
 triggers:
   - setup
-  - git
   - workspace
   - credentials
 license: Apache-2.0
 metadata:
   author: Adobe
-  version: "0.1"
+  version: "0.2"
 ---
 
 # Infra — Domain Router
 
 **ID:** `infra`
-**Version:** 0.1
-**Description:** Domain router for infrastructure skills — workspace setup, EDS code sync, and sandboxed git operations.
+**Version:** 0.2
+**Description:** Domain router for infrastructure skills — workspace setup.
 
 This router does not implement — it delegates. It matches user intents to the correct skill within this domain.
 
@@ -32,10 +30,8 @@ First match wins.
 | Intent | Examples | Skill |
 |--------|----------|-------|
 | Set up workspace, initialize project, configure credentials, system prereqs | "set up my workspace", "configure credentials" | `setup-workspace` |
-| Pull / push EDS code, create branch, open PR on GitHub, code sync | "push EDS code", "open a PR on GitHub", "sync code" | `sync-eds-code` |
-| Sandboxed git commit / push / reset, restricted git operations | "commit my changes", "git push", "reset branch" | `git-sandbox` |
 
-> If the intent is ambiguous between two skills, present the options to the user and let them choose.
+> If the intent doesn't match the above, it belongs in another domain (e.g. git operations belong in the user's EDS repo using native git commands).
 
 ---
 
@@ -46,16 +42,12 @@ All skills owned by this domain.
 | # | Skill | Purpose | Triggers |
 |---|-------|---------|----------|
 | 1 | `setup-workspace` | Initialize project, configure credentials | setup, workspace, credentials, initialize |
-| 2 | `sync-eds-code` | Pull / push EDS code, branch, open PR on GitHub | sync, code, eds, branch, pr, github |
-| 3 | `git-sandbox` | Sandboxed git operations (commit, push, reset) | git, commit, push, reset, sandbox |
 
 ### Skill Locations
 
 | Skill | Path |
 |-------|------|
 | `setup-workspace` | [`references/setup-workspace/SKILL.md`](references/setup-workspace/SKILL.md) |
-| `sync-eds-code` | [`references/sync-eds-code/SKILL.md`](references/sync-eds-code/SKILL.md) |
-| `git-sandbox` | [`references/git-sandbox/SKILL.md`](references/git-sandbox/SKILL.md) |
 
 ---
 
@@ -67,14 +59,6 @@ Guard policies are constraints that apply across all skills in this domain. They
 
 ---
 
-## Config Files
-
-| File | Managed By | Purpose |
-|------|------------|---------|
-| `sandbox.json` | `git-sandbox` | Restricts allowed commit paths and push branch names |
-
----
-
 ## File Locations
 
 Canonical paths for assets managed by skills in this domain.
@@ -83,7 +67,7 @@ Canonical paths for assets managed by skills in this domain.
 |-------|------|
 | Forms | `repo/content/forms/af/<team>/<path>/<name>.form.json` |
 | Rule stores | `repo/content/forms/af/<team>/<path>/<name>.rule.json` |
-| EDS code | `code/blocks/form/` |
+| EDS code | `blocks/form/` (in `$FORMS_EDS_ROOT`) |
 
 ---
 
@@ -93,7 +77,7 @@ Other domains or skills that this domain's skills may delegate to or depend on.
 
 | Dependency | Direction | Reason |
 |------------|-----------|--------|
-| All other domains | Other domains → `infra` | All other domains depend on infra for deployment (`sync-eds-code`, `git-sandbox`) |
+| All other domains | Other domains → `infra` | All other domains depend on infra for initial workspace setup |
 
 ---
 
@@ -104,7 +88,7 @@ How this domain participates in plan-driven execution.
 | When | Skill(s) Invoked | Role |
 |------|-------------------|------|
 | Before any plans — workspace setup | `setup-workspace` | Initializes project, configures credentials, verifies prerequisites |
-| End of each plan's validate + deploy step | `sync-eds-code`, `git-sandbox` | Pushes EDS code and commits changes after each plan completes |
+| End of each plan's validate + deploy step | (none — native git) | Use `git add blocks/form/ && git commit && git push` directly in `$FORMS_EDS_ROOT` |
 
 ---
 

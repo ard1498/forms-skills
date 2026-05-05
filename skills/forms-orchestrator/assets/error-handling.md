@@ -200,7 +200,7 @@ All tools follow Unix conventions:
 |-------------|-----------|------------|
 | `PYTHONPATH` includes `scripts/` | Python tools (rule_coder, api_manager) | `PYTHONPATH="<plugin-root>/scripts"` prefix |
 | `node_modules/` in `rule_coder/bridge/` | All Node.js bridge scripts | `npm install` in that directory |
-| `AEM_HOST` + `AEM_TOKEN` env vars | `api-manager`, `eds-code-sync` | Set in shell or MCP config |
+| `AEM_HOST` + `AEM_TOKEN` env vars | `api-manager` | Set in shell or MCP config |
 | Working directory = workspace root | All tools (relative paths) | `cd` to workspace before running |
 
 ---
