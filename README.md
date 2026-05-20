@@ -14,7 +14,7 @@ Repository of Adobe AEM Forms skills for AI coding agents.
 
 ### AEM Forms
 
-Turn natural language into production AEM Adaptive Forms. A plan-driven skill gateway across 6 domains.
+Turn natural language into production AEM Adaptive Forms. A plan-driven skill gateway across 5 domains.
 
 **Quick Start:**
 ```bash
@@ -32,7 +32,6 @@ The **forms-orchestrator** routes intents through a 6-step algorithm — it gene
 | `content-author` | `forms-custom-components` (+ `forms-content-update`, `forms-content-generate` internally) |
 | `rule-creator` | `forms-rule-creator` |
 | `integration` | `manage-apis` |
-| `infra` | `setup-workspace` |
 | `context-management` | `manage-context` |
 
 **Requirements:** Node.js 18+, `git` on PATH.
@@ -43,20 +42,19 @@ The **forms-orchestrator** routes intents through a 6-step algorithm — it gene
 forms-skills/
 ├── .claude-plugin/plugin.json          ← plugin identity (aem-forms)
 ├── evals/                              ← eval scenarios, fixtures, runner scripts
-├── skills/
-│   ├── forms-orchestrator/             ← entry point router
-│   ├── forms-analysis/                 ← analysis domain
-│   ├── forms-content-author/           ← content authoring domain
-│   │   ├── forms-content-update/       ← MCP-based form authoring (internal sub-skill)
-│   │   ├── forms-content-generate/     ← component payload builder (internal sub-skill)
-│   │   └── references/
-│   │       └── forms-custom-components/
-│   ├── forms-rule-creator/             ← rule & custom function authoring
-│   ├── forms-infra/                    ← infra domain
-│   ├── forms-integration/              ← integration domain
-│   ├── forms-context-management/       ← context & session domain
-│   └── forms-shared/                   ← shared scripts (api-manager, etc.)
-└── README.md
+├── lib/                                ← shared scripts and Python runtime
+│   └── scripts/                           (api-manager, setup.sh, venv)
+└── skills/
+    ├── forms-orchestrator/             ← entry point router
+    ├── forms-analysis/                 ← analysis domain
+    ├── forms-content-author/           ← content authoring domain
+    │   └── references/
+    │       ├── forms-content-update/   ← MCP-based form authoring
+    │       ├── forms-content-generate/ ← component payload builder
+    │       └── forms-custom-components/
+    ├── forms-rule-creator/             ← rule & custom function authoring
+    ├── forms-integration/              ← integration domain
+    └── forms-context-management/       ← context & session domain
 ```
 
 ## Contributing

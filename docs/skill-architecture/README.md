@@ -162,11 +162,10 @@ Skill trees may also define **specialized templates** that extend the generic ro
 
 | Specialization | Produces Type | Defined By | Location |
 |---------------|--------------|-----------|----------|
-| Domain Router Template | `domain` | `aem/forms` | `domains/assets/templates/domain-template.md` |
-| Planner Template | `skill` (planner) | `aem/forms` | `planner/SKILL.md` |
-| Plan Template | `plan-template` | `aem/forms` | `planner/assets/plan-template.md` |
-| Plan Type Reference | `plan-type` | `aem/forms` | `planner/references/<type>-plan.md` |
-| Strategy | `strategy` | `aem/forms` | `planner/references/default-strategy.md` |
+| Domain Router Template | `domain` | `aem/forms` | `references/domain-registry/assets/TEMPLATE.md` |
+| Planner Template | `skill` (planner) | `aem/forms` | `references/planner/SKILL.md` |
+| Plan + Strategy Template | `plan-template` | `aem/forms` | `references/planner/assets/TEMPLATE.md` |
+| Planner Guardrails | `guardrails` | `aem/forms` | `references/planner/assets/GUARDRAILS.md` |
 
 > **Leaf skills** (`type: skill`) don't need a template — they follow the freeform [agentskills.io](https://agentskills.io) format. Keep them under 500 lines / 5,000 tokens.
 
@@ -332,16 +331,15 @@ The planner uses a configurable strategy to decide how to decompose requirements
 | Priority | Location | Description |
 |----------|----------|-------------|
 | 1 (highest) | `plans/custom-strategy.md` | User-provided override |
-| 2 (default) | `references/default-strategy.md` | Default workflow-focused decomposition |
+| 2 (default) | `references/planner/assets/GUARDRAILS.md` | Default workflow-focused decomposition |
 
 ### Key Files in a Plan-Driven System
 
 | What | Where |
 |------|-------|
 | Planner | `references/planner/SKILL.md` |
-| Plan template | `references/planner/assets/plan-template.md` |
-| Default strategy | `references/planner/references/default-strategy.md` |
-| Plan type references | `references/planner/references/<type>-plan.md` |
+| Plan + strategy template | `references/planner/assets/TEMPLATE.md` |
+| Planner guardrails | `references/planner/assets/GUARDRAILS.md` |
 | Generated plan files | `plans/<journey>/NN-<title>.md` |
 | User strategy override | `plans/custom-strategy.md` |
 

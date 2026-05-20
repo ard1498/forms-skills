@@ -1,10 +1,9 @@
 ---
 name: manage-context
 description: >
-  Manages agent memory files in the .agent/ workspace directory — handover.md,
-  history.md, and sessions.md. Maintains continuity across sessions by capturing
-  project state, archiving history, logging session activity, and generating
-  progress reports. Opt-in — prompts the user before updating.
+  Use when saving session progress, updating agent reports, or managing
+  .agent/ memory files (handover.md, history.md, sessions.md). Opt-in —
+  prompts user before updating.
   Triggers: update context, save progress, handover, session log, agent memory,
   update reports, save state, what did we do, session summary, generate report,
   progress report, track progress.

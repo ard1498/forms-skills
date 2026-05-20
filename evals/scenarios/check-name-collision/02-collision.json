@@ -1,7 +1,7 @@
 {
   "id": "check-name-collision-collision",
   "description": "Duplicate name returns collision:true with the pointer to the existing field",
-  "script": "skills/forms-content-author/forms-content-generate/scripts/check-name-collision.bundle.js",
+  "script": "skills/forms-content-author/references/forms-content-generate/scripts/check-name-collision.bundle.js",
   "args": {
     "--content-model": "@fixtures/content-model-contact-us.json",
     "--name": "full_name"

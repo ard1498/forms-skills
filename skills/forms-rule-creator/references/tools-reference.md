@@ -1,26 +1,24 @@
 # CLI Tools Reference
 
-All tools are pre-bundled in `$SKILL_DIR/scripts/` — no `npm install` required at runtime.
+All tools are pre-bundled in `$SKILL_DIR/scripts/`. Run with `node $SKILL_DIR/scripts/<name>.jsh` (Node.js) or `<name>` (SLICC — auto-discovered as commands). No `npm install` required.
+
 All tools write JSON to stdout and exit non-zero on failure.
 
 ---
 
-## `content-model-to-tree.bundle.js`
+## `transform-jcr`
 
-Converts an AEM Sites Content API content model (`get-aem-page-content` response) to treeJson.
-**Use this instead of `aemf-transform-jcr`.** No AEM credentials or extra HTTP call required.
+Converts a raw JCR export to treeJson used by all other tools.
 
-**Input:**
 ```bash
-node $SKILL_DIR/scripts/content-model-to-tree.bundle.js --content-model '<json>'
-node $SKILL_DIR/scripts/content-model-to-tree.bundle.js --content-model-file /tmp/content-model.json
+node $SKILL_DIR/scripts/transform-jcr.jsh <jcr.json>
+node $SKILL_DIR/scripts/transform-jcr.jsh --stdin
 ```
 
 **Output (success):**
 ```json
-{ "success": true, "treeJson": { "id": "$form", "items": [...] } }
+{ "success": true, "treeJson": { "id": "$form", "items": [...] }, "outputPath": "/tmp/treeJson.json" }
 ```
-Also writes treeJson to `/tmp/treeJson.json`.
 
 **Output (failure):**
 ```json
@@ -31,19 +29,101 @@ Also writes treeJson to `/tmp/treeJson.json`.
 
 ---
 
-## `validate-rule.bundle.js`
+## `transform-content-model`
+
+Converts a Sites Content API content model to treeJson.
+
+```bash
+node $SKILL_DIR/scripts/transform-content-model.jsh <content-model.json>
+node $SKILL_DIR/scripts/transform-content-model.jsh --content-model-file <path>
+node $SKILL_DIR/scripts/transform-content-model.jsh --stdin
+```
+
+**Output (success):**
+```json
+{ "success": true, "treeJson": { "id": "$form", "items": [...] }, "outputPath": "/tmp/treeJson.json" }
+```
+
+**Output (failure):**
+```json
+{ "success": false, "error": "..." }
+```
+
+**Exit code:** 0 on success, 1 on failure.
+
+---
+
+## `parse-functions`
+
+Parses a custom functions JS file into a structured array.
+
+```bash
+node $SKILL_DIR/scripts/parse-functions.jsh <functions.js>
+node $SKILL_DIR/scripts/parse-functions.jsh --stdin
+```
+
+**Output (success):**
+```json
+{
+  "success": true,
+  "customFunction": [
+    { "name": "myFn", "id": "myFn", "args": [...] }
+  ],
+  "imports": ["import something from './module.js';"]
+}
+```
+
+**Output (failure):**
+```json
+{ "success": false, "error": "..." }
+```
+
+**Exit code:** 0 on success, 1 on failure.
+
+---
+
+## `find-field`
+
+Looks up one or more fields in a treeJson scope tree. Matches against `name`, `displayName` (case-insensitive), `path`, or qualified `id` — tried in that order.
+
+```bash
+node $SKILL_DIR/scripts/find-field.jsh --tree <treeJson.json> --name <value>
+node $SKILL_DIR/scripts/find-field.jsh --tree <treeJson.json> --names <v1,v2,...>
+```
+
+**Output (single, found):**
+```json
+{ "found": true, "qualifiedId": "$form.textfield1", "name": "textfield1", "displayName": "Full Name", "type": "AFCOMPONENT|FIELD|TEXT FIELD|STRING", "fieldType": "text-input", "isPanel": false }
+```
+
+**Output (single, not found):**
+```json
+{ "found": false, "name": "Full Name" }
+```
+
+**Output (multi):**
+```json
+[{ "name": "Full Name", "found": true, "qualifiedId": "$form.textfield1", ... }, ...]
+```
+
+**Exit code:** 0 = found (all found for multi), 1 = not found, 2 = bad args.
+
+---
+
+## `validate-rule`
 
 Validates a rule AST object against the grammar and scope.
 
-**Input:**
 ```bash
-node $SKILL_DIR/scripts/validate-rule.bundle.js <rule.json> --tree <treeJson.json> [--functions <cf.json>] [--storage-path <fd:click>]
+node $SKILL_DIR/scripts/validate-rule.jsh <rule.json> --tree <treeJson.json> \
+  [--functions <cf.json>] [--storage-path <fd:calc>] [--toggles <toggles.json>]
 ```
 
-- `<rule.json>` — file containing the rule AST object (`nodeName: 'ROOT'` node)
-- `--tree` — treeJson file from `content-model-to-tree.bundle.js`
-- `--functions` — JSON array of custom function definitions (output `.customFunction` from `parse-functions.bundle.js`)
-- `--storage-path` — optional fd:* key for context validation (e.g., `fd:calc` rejects EVENT_SCRIPTS)
+- `<rule.json>` — file containing the rule AST (`nodeName: 'ROOT'`)
+- `--tree` — treeJson from `transform-jcr` or `transform-content-model`
+- `--functions` — `.customFunction` array from `parse-functions` output
+- `--storage-path` — fd:* key for context validation (e.g. `fd:calc` rejects EVENT_SCRIPTS)
+- `--toggles` — JSON object of feature toggle overrides
 
 **Output (valid):**
 ```json
@@ -81,106 +161,48 @@ node $SKILL_DIR/scripts/validate-rule.bundle.js <rule.json> --tree <treeJson.jso
 
 ---
 
-## `generate-formula.bundle.js`
+## `generate-formula`
 
-Transforms a validated rule AST to `fd:rules` + `fd:events` and validates the compiled formula.
-Wraps `RuleTransformer.transform()` from `@aemforms/rule-editor-transformer`.
+Transforms a rule AST to `fd:rules` + `fd:events` and validates the formula.
 
-**Input:**
 ```bash
-node $SKILL_DIR/scripts/generate-formula.bundle.js <rule.json> --tree <treeJson.json> [--functions <cf.json>] [--event <fd:click>]
+node $SKILL_DIR/scripts/generate-formula.jsh <rule.json> --tree <treeJson.json> \
+  [--functions <cf.json>] [--event <fd:click>] [--toggles <toggles.json>]
 ```
 
-- `--event` — fd:* storage key for the rule (e.g., `fd:visible`, `fd:click`, `fd:validate`)
-
-**Output (success, single-rule AST with `nodeName`):**
-```json
-{
-  "success": true,
-  "formulaValid": true,
-  "fdRules": {
-    "fd:visible": {
-      "content": "firstName != ''",
-      "field": null,
-      "event": null,
-      "model": null,
-      "otherEvents": null
-    }
-  },
-  "fdEvents": {}
-}
-```
-
-Extract the formula: `fdRules["fd:<key>"].content` → the expression string.
-
-**Output (success, field input with `fd:*` keys):**
-```json
-{
-  "success": true,
-  "formulaValid": true,
-  "fdRules": { "visible": "<expression>" },
-  "fdEvents": { "click": ["<script>"] }
-}
-```
-
-**Output (failure):**
-```json
-{ "success": false, "formulaValid": false, "error": "..." }
-```
-
-**Exit code:** 0 on success, 1 on failure.
-
----
-
-## `parse-functions.bundle.js`
-
-Parses a custom functions JS file into a structured array for use with validate/generate.
-
-**Input:**
-```bash
-node $SKILL_DIR/scripts/parse-functions.bundle.js <functions.js>
-node $SKILL_DIR/scripts/parse-functions.bundle.js --stdin
-```
+- `--event` — fd:* key override (inferred from `ruleJson.eventName` or STATEMENT type if omitted)
 
 **Output (success):**
 ```json
 {
   "success": true,
-  "customFunction": [
-    { "name": "myFn", "id": "myFn", "args": [...] }
-  ],
-  "imports": ["import something from './module.js';"]
+  "input": { "fd:click": ["{...ruleJson stringified}"] },
+  "fdEvents": { "click": ["submitForm()"] },
+  "fdRules": {},
+  "formulaValid": true
 }
 ```
 
 **Output (failure):**
 ```json
-{ "success": false, "error": "..." }
+{ "success": false, "error": "...", "formulaValid": false }
 ```
 
 **Exit code:** 0 on success, 1 on failure.
 
-> **Note:** `parse-functions.bundle.js` requires the `vendor/` directory from `@aemforms/rule-editor-transformer` to be present alongside the bundle at runtime. Custom function parsing is an optional step — skip if no custom functions are used.
-
 ---
 
-## `validate-merge.bundle.js`
+## `merge-formula`
 
-Validates the merged `{ fd:rules, fd:events }` object — checks that expression rules stay in `fd:rules` and event rules route to `fd:events`.
+Merges a `generate-formula` output into a `{ "fd:rules": {...}, "fd:events": {...} }` object ready for insertion into the rule store.
 
-**Input:**
 ```bash
-node $SKILL_DIR/scripts/validate-merge.bundle.js <merged-rule.json>
+node $SKILL_DIR/scripts/merge-formula.jsh <generate-formula-output.json>
 ```
 
-**Output (valid):**
+**Output:**
 ```json
-{ "valid": true, "errors": [], "warnings": [] }
+{ "fd:rules": { "fd:calc": ["...formula..."] }, "fd:events": {} }
 ```
 
-**Output (invalid):**
-```json
-{ "valid": false, "errors": [...], "warnings": [] }
-```
-
-**Exit code:** 0 if valid, 1 if invalid.
+**Exit code:** 0 on success, 1 on error.

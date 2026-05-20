@@ -1,7 +1,7 @@
 {
   "id": "find-field-fd-rules-not-found",
   "description": "find-field returns found=false for fd:rules and fd:events when form has no existing rules — apply-rule-workflow uses this to determine add vs replace path",
-  "script": "skills/forms-content-author/forms-content-update/scripts/find-field.bundle.js",
+  "script": "skills/forms-content-author/references/forms-content-update/scripts/find-field.bundle.js",
   "args": {
     "--content-model": "@fixtures/content-model-no-rules.json",
     "--names": "fd:rules,fd:events"

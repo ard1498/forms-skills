@@ -1,11 +1,11 @@
 {
   "id": "generate-formula-event-scripts",
   "description": "EVENT_SCRIPTS rule compiles without error — formulaValid true, success true",
-  "script": "skills/forms-rule-creator/scripts/generate-formula.bundle.js",
+  "script": "skills/forms-rule-creator/scripts/generate-formula.jsh",
   "positionalArgs": ["fixture:rule-ast-broken-ref.json"],
   "args": {
     "--tree": "fixture:tree-contact-us.json",
-    "--event": "fd:change"
+    "--event": "fd:click"
   },
   "expectedExitCode": 0,
   "expectedOutput": {

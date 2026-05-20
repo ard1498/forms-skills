@@ -1,7 +1,7 @@
 {
   "id": "validate-patch-valid-bool",
   "description": "Replace required (boolean true) passes validation",
-  "script": "skills/forms-content-author/forms-content-update/scripts/validate-patch.bundle.js",
+  "script": "skills/forms-content-author/references/forms-content-update/scripts/validate-patch.bundle.js",
   "args": {
     "--content-model": "@fixtures/content-model-contact-us.json",
     "--definition": "@fixtures/definition-slim.json",

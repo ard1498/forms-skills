@@ -1,7 +1,7 @@
 {
   "id": "validate-rule-invalid-grammar",
   "description": "SET_VALUE_STATEMENT using COMPONENT at position 0 instead of VALUE_FIELD fails grammar validation",
-  "script": "skills/forms-rule-creator/scripts/validate-rule.bundle.js",
+  "script": "skills/forms-rule-creator/scripts/validate-rule.jsh",
   "positionalArgs": ["fixture:rule-ast-change-valid.json"],
   "args": {
     "--tree": "fixture:tree-contact-us.json",

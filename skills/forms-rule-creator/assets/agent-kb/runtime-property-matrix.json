@@ -1,0 +1,589 @@
+{
+  "schemaVersion": "2.0.0",
+  "purpose": "Canonical property-access matrix for Adaptive Form runtime/rules lookups.",
+  "propertyNaming": {
+    "canonicalPropertyNameFormat": "plain",
+    "runtimeAccessPattern": "<elementRef>.$<property>",
+    "elementRefExamples": [
+      "$form.<path>",
+      "$field",
+      "$fragment",
+      "<siblingOrChildElementName>"
+    ]
+  },
+  "accessModel": {
+    "readOnly": "For rule-accessible properties in this matrix, true means read-only in rules; false means writable by rules."
+  },
+  "sources": [
+    "spec/adaptive_form_object.adoc",
+    "spec/adaptive_form_field_object.adoc",
+    "spec/adaptive_form_panel_object.adoc",
+    "spec/expressions.adoc",
+    "spec/index.adoc"
+  ],
+  "properties": {
+    "fieldCommon": [
+      {
+        "name": "dataRef",
+        "readOnly": true
+      },
+      {
+        "name": "default",
+        "readOnly": true
+      },
+      {
+        "name": "description",
+        "readOnly": false
+      },
+      {
+        "name": "displayFormat",
+        "readOnly": true
+      },
+      {
+        "name": "displayValueExpression",
+        "readOnly": true
+      },
+      {
+        "name": "editFormat",
+        "readOnly": true
+      },
+      {
+        "name": "emptyValue",
+        "readOnly": true
+      },
+      {
+        "name": "enabled",
+        "readOnly": false
+      },
+      {
+        "name": "enum",
+        "readOnly": false
+      },
+      {
+        "name": "enumNames",
+        "readOnly": false
+      },
+      {
+        "name": "fieldType",
+        "readOnly": true
+      },
+      {
+        "name": "label",
+        "readOnly": false
+      },
+      {
+        "name": "lang",
+        "readOnly": true
+      },
+      {
+        "name": "name",
+        "readOnly": true
+      },
+      {
+        "name": "placeholder",
+        "readOnly": false
+      },
+      {
+        "name": "properties",
+        "readOnly": false
+      },
+      {
+        "name": "readOnly",
+        "readOnly": false
+      },
+      {
+        "name": "screenReaderText",
+        "readOnly": true
+      },
+      {
+        "name": "tooltip",
+        "readOnly": true
+      },
+      {
+        "name": "repeatable",
+        "readOnly": true
+      },
+      {
+        "name": "visible",
+        "readOnly": false
+      }
+    ],
+    "fieldConstraints": [
+      {
+        "name": "accept",
+        "readOnly": true
+      },
+      {
+        "name": "enforceEnum",
+        "readOnly": true
+      },
+      {
+        "name": "exclusiveMaximum",
+        "readOnly": false
+      },
+      {
+        "name": "exclusiveMinimum",
+        "readOnly": false
+      },
+      {
+        "name": "format",
+        "readOnly": true
+      },
+      {
+        "name": "maxFileSize",
+        "readOnly": true
+      },
+      {
+        "name": "maximum",
+        "readOnly": false
+      },
+      {
+        "name": "maxItems",
+        "readOnly": false
+      },
+      {
+        "name": "maxLength",
+        "readOnly": true
+      },
+      {
+        "name": "minimum",
+        "readOnly": false
+      },
+      {
+        "name": "minItems",
+        "readOnly": false
+      },
+      {
+        "name": "minLength",
+        "readOnly": true
+      },
+      {
+        "name": "pattern",
+        "readOnly": true
+      },
+      {
+        "name": "required",
+        "readOnly": false
+      },
+      {
+        "name": "step",
+        "readOnly": true
+      },
+      {
+        "name": "type",
+        "readOnly": true
+      },
+      {
+        "name": "uniqueItems",
+        "readOnly": true
+      }
+    ],
+    "fieldRuntime": [
+      {
+        "name": "value",
+        "readOnly": false
+      },
+      {
+        "name": "valid",
+        "readOnly": false
+      },
+      {
+        "name": "errorMessage",
+        "readOnly": false
+      },
+      {
+        "name": "index",
+        "readOnly": true
+      },
+      {
+        "name": "parent",
+        "readOnly": true
+      },
+      {
+        "name": "qualifiedName",
+        "readOnly": true
+      }
+    ],
+    "panelAdditional": [
+      {
+        "name": "items",
+        "readOnly": true
+      }
+    ],
+    "fieldTypeAdditional": {
+      "checkbox": [
+        {
+          "name": "checked",
+          "readOnly": false
+        }
+      ],
+      "panel": [
+        {
+          "name": "value",
+          "readOnly": true
+        },
+        {
+          "name": "valid",
+          "readOnly": true
+        },
+        {
+          "name": "maxItems",
+          "readOnly": false
+        },
+        {
+          "name": "minItems",
+          "readOnly": false
+        }
+      ]
+    },
+    "form": [
+      {
+        "name": "title",
+        "readOnly": true
+      },
+      {
+        "name": "description",
+        "readOnly": false
+      },
+      {
+        "name": "action",
+        "readOnly": true
+      },
+      {
+        "name": "label",
+        "readOnly": false
+      },
+      {
+        "name": "visible",
+        "readOnly": false
+      },
+      {
+        "name": "enabled",
+        "readOnly": false
+      },
+      {
+        "name": "readOnly",
+        "readOnly": false
+      },
+      {
+        "name": "properties",
+        "readOnly": false
+      },
+      {
+        "name": "maxItems",
+        "readOnly": false
+      },
+      {
+        "name": "minItems",
+        "readOnly": false
+      }
+    ]
+  },
+  "fieldTypeProperties": {
+    "text-input": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": ["accept", "maxFileSize", "maxItems", "minItems"]
+    },
+    "number-input": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "accept",
+        "format",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    },
+    "date-input": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "accept",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    },
+    "datetime-input": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "accept",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    },
+    "file-input": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": ["maxItems", "maxLength", "minItems", "minLength", "pattern"]
+    },
+    "drop-down": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "accept",
+        "format",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    },
+    "radio-group": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "accept",
+        "format",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    },
+    "checkbox-group": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "accept",
+        "format",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    },
+    "plain-text": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "default",
+        "displayFormat",
+        "displayValueExpression",
+        "editFormat",
+        "emptyValue",
+        "enabled",
+        "readOnly",
+        "tooltip",
+        "accept",
+        "enforceEnum",
+        "format",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern",
+        "step",
+        "type"
+      ]
+    },
+    "checkbox": {
+      "includes": [
+        "fieldCommon",
+        "fieldConstraints",
+        "fieldRuntime",
+        "fieldTypeAdditional"
+      ],
+      "excludes": [
+        "accept",
+        "format",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    },
+    "button": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "readOnly",
+        "accept",
+        "format",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    },
+    "multiline-input": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "accept",
+        "format",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    },
+    "panel": {
+      "includes": [
+        "fieldCommon",
+        "fieldConstraints",
+        "fieldRuntime",
+        "panelAdditional",
+        "fieldTypeAdditional"
+      ],
+      "excludes": [
+        "default",
+        "displayFormat",
+        "displayValueExpression",
+        "editFormat",
+        "emptyValue",
+        "enum",
+        "enumNames",
+        "placeholder",
+        "tooltip",
+        "accept",
+        "enforceEnum",
+        "exclusiveMaximum",
+        "exclusiveMinimum",
+        "format",
+        "maxFileSize",
+        "maximum",
+        "maxLength",
+        "minimum",
+        "minLength",
+        "pattern",
+        "required",
+        "step",
+        "errorMessage"
+      ]
+    },
+    "image": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "enabled",
+        "readOnly",
+        "accept",
+        "format",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    },
+    "email": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "accept",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    },
+    "captcha": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "accept",
+        "format",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    },
+    "tel": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "accept",
+        "format",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    },
+    "password": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "accept",
+        "format",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    },
+    "range": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "accept",
+        "format",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    },
+    "color": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "accept",
+        "format",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    },
+    "hidden": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "accept",
+        "format",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    },
+    "url": {
+      "includes": ["fieldCommon", "fieldConstraints", "fieldRuntime"],
+      "excludes": [
+        "accept",
+        "format",
+        "maxFileSize",
+        "maxItems",
+        "maxLength",
+        "minItems",
+        "minLength",
+        "pattern"
+      ]
+    }
+  }
+}

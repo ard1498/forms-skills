@@ -1,7 +1,7 @@
 {
   "id": "resolve-component-type-button-hint",
   "description": "Resolves ambiguous button fieldType to submit componentType using hint",
-  "script": "skills/forms-content-author/forms-content-generate/scripts/resolve-component-type.bundle.js",
+  "script": "skills/forms-content-author/references/forms-content-generate/scripts/resolve-component-type.bundle.js",
   "args": {
     "--definition-file": "fixture:definition-slim.json",
     "--field-type": "button",

@@ -119,6 +119,6 @@ Link to offloaded content. Remove rows that don't apply.
 
 | Router | Type | Pattern | Location |
 |--------|------|---------|----------|
-| Forms Orchestrator | `router` | Top-level gateway → planner + domain registry | `skills/aem/forms/forms-orchestrator/SKILL.md` |
-| Domain Registry | `router` | Catalogs domains, resolves plan steps to skills | `skills/aem/forms/forms-orchestrator/references/domain-registry/SKILL.md` |
-| Analysis Domain | `domain` | Routes analysis intents to analysis skills | `skills/aem/forms/forms-orchestrator/references/domain-registry/references/analysis/SKILL.md` |
+| Forms Orchestrator | `router` | Top-level gateway → planner + domain registry | `skills/forms-orchestrator/SKILL.md` |
+| Domain Registry | `router` | Catalogs domains, resolves plan steps to skills | `skills/forms-orchestrator/references/domain-registry/SKILL.md` |
+| Analysis Domain | `domain` | Routes analysis intents to analysis skills | `skills/forms-analysis/SKILL.md` |

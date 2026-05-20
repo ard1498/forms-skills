@@ -107,7 +107,8 @@ function runScenario(scenarioFile) {
     argv.push(flag, resolveArg(value));
   }
 
-  const result = spawnSync('node', [scriptPath, ...argv], {
+  const nodeArgs = scriptPath.endsWith('.jsh') ? ['--experimental-require-module'] : [];
+  const result = spawnSync('node', [...nodeArgs, scriptPath, ...argv], {
     encoding: 'utf8',
     timeout: 15000,
   });

@@ -99,7 +99,7 @@ Access a property of a component (e.g., `visible of field1`).
 }
 ```
 
-Valid properties per field type are defined in `agent-kb/06-rule-properties-by-field-type.md`. Common ones:
+Valid properties per field type are defined in `../agent-kb/06-rule-properties-by-field-type.md`. Common ones:
 - All fields: `"value"`, `"visible"`, `"enabled"`, `"valid"`, `"label"`
 - Number fields: additionally `"minimum"`, `"maximum"`
 - Date fields: additionally `"minimum"`, `"maximum"`

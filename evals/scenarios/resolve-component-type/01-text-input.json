@@ -1,7 +1,7 @@
 {
   "id": "resolve-component-type-text-input",
   "description": "Resolves text-input fieldType to canonical textinput componentType",
-  "script": "skills/forms-content-author/forms-content-generate/scripts/resolve-component-type.bundle.js",
+  "script": "skills/forms-content-author/references/forms-content-generate/scripts/resolve-component-type.bundle.js",
   "args": {
     "--definition-file": "fixture:definition-slim.json",
     "--field-type": "text-input"

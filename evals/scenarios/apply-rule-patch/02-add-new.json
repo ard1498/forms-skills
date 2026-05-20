@@ -1,7 +1,7 @@
 {
   "id": "apply-rule-patch-add",
   "description": "When fd:rules does not exist, generates an add op inserting a full fd:rules node",
-  "script": "skills/forms-content-author/forms-content-update/scripts/apply-rule-patch.bundle.js",
+  "script": "skills/forms-content-author/references/forms-content-update/scripts/apply-rule-patch.bundle.js",
   "args": {
     "--merged-rule-file": "fixture:merged-rule-visible.json",
     "--find-field-result-file": "fixture:ff-result-rules-not-found.json",

@@ -1,7 +1,11 @@
 ---
 name: forms-context-management
-description: Domain router for agentic context management — session state, progress saving, and report generation/update
-type: domain
+description: >
+  Use when user wants to save session progress, update agent reports, or
+  manage context across sessions.
+  Triggers: update context, save progress, session log, update reports,
+  handover, agent memory.
+type: router
 triggers:
   - update reports
   - save progress
@@ -20,12 +24,6 @@ metadata:
 ---
 
 # Context Management — Domain Router
-
-| | |
-|---|---|
-| **ID** | `context-management` |
-| **Version** | 0.1 |
-| **Description** | Routes agentic context management intents — session state, progress tracking, and report generation/update. |
 
 ## Routing Table
 
@@ -50,9 +48,7 @@ First match wins.
 
 ## Guard Policies
 
-> After each plan completes, the orchestrator prompts:
-> **"Would you like me to update the project reports?"**
-> If confirmed, routes here. Never update silently.
+After each plan completes, the orchestrator prompts **"Would you like me to update the project reports?"** — if confirmed, routes here; never updates silently.
 
 ## File Locations
 
@@ -72,8 +68,6 @@ Invoked at post-plan checkpoints to update project reports (handover, history, s
 
 ## Extending This Domain
 
-1. Create a new skill directory under `references/<skill-name>/`.
-2. Add a `SKILL.md` following the skill template structure.
-3. Register the skill in the **Skills** table and **Skill Locations** sub-table above.
-4. Add a routing entry in the **Routing Table** for the intents the new skill handles.
-5. Update **triggers** in the YAML frontmatter if the new skill introduces new trigger phrases.
+- Create `references/<skill-name>/SKILL.md` → register in **Skills** table and **Skill Locations**.
+- Add a routing entry in **Routing Table** for the new skill's intents.
+- Update **triggers** in frontmatter for any new trigger phrases.

@@ -1,11 +1,11 @@
 ---
 name: jud-to-screen
 description: >
-  Creates Screen.md documentation for AEM Forms screens from a JUD (.docx) and design screenshots.
-  Generates structured docs covering fields, validation rules, API calls, business logic, visibility
-  rules, panel hierarchy, and global variable tracking. Also writes or updates the journey-level
-  globals-variable-registry.md. Supports single-screen and all-screens modes. Global variables optional.
-  Triggers: jud to screen, jud, docx screen, document screen from jud, screenshot screen doc.
+  Use when creating Screen.md documentation from a JUD (.docx) file and design
+  screenshots. Supports single-screen and all-screens modes; generates
+  globals-variable-registry.md.
+  Triggers: jud to screen, jud, docx screen, document screen from jud,
+  screenshot screen doc.
 type: skill
 license: Apache-2.0
 metadata:

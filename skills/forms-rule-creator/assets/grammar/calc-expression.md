@@ -15,12 +15,13 @@ Used for `fd:calc` (Calculate event). CALC_EXPRESSION sets a value; CLEAR_EXPRES
       "nodeName": "CALC_EXPRESSION",
       "items": [
         { "nodeName": "VALUE_FIELD", "value": { "id": "$form.totalField" } },
-        { "nodeName": "Using", "value": null },
-        { "nodeName": "Expression", "value": null },
+        { "nodeName": "to", "value": null },
         {
           "nodeName": "EXPRESSION",
           "choice": { ... }
-        }
+        },
+        { "nodeName": "When", "value": null },
+        { "nodeName": "CONDITIONORALWAYS", "choice": null }
       ]
     }
   }],
@@ -29,13 +30,9 @@ Used for `fd:calc` (Calculate event). CALC_EXPRESSION sets a value; CLEAR_EXPRES
 }
 ```
 
-The sequence is always: `VALUE_FIELD`, `Using`, `Expression`, `EXPRESSION`.
+The sequence is always: `VALUE_FIELD`, `to`, `EXPRESSION`, `When`, `CONDITIONORALWAYS`.
 
-`Using` and `Expression` are keyword/label nodes with `value: null`.
-
-> **No conditional support in CALC_EXPRESSION.** The grammar does not include `When`/`CONDITIONORALWAYS` nodes.
-> For "set value when condition", use **EVENT_SCRIPTS** on the trigger field's `fd:change` event —
-> `EQUALS_TO` in `EVENT_AND_COMPARISON_OPERATOR`, then `SET_VALUE_STATEMENT` in `BLOCK_STATEMENTS`.
+`CONDITIONORALWAYS.choice: null` means always calculate. For a conditional calc, use a COMPARISON_EXPRESSION (see conditions.md).
 
 ---
 
@@ -76,7 +73,7 @@ The sequence is always: `VALUE_FIELD`, `Using`, `Expression`, `EXPRESSION`.
 }
 ```
 
-For OOTB function `id` and `impl` values, see `agent-kb/08-ootb-functions-reference.md`. For json-formula expression syntax, see `agent-kb/07-json-formula-for-rules.md`.
+For OOTB function `id` and `impl` values, see `../agent-kb/08-ootb-functions-reference.md`. For json-formula expression syntax, see `../agent-kb/07-json-formula-for-rules.md`.
 
 ---
 
@@ -117,8 +114,7 @@ Sequence: `VALUE_FIELD When CONDITIONORALWAYS`. Use `CONDITIONORALWAYS.choice: n
       "nodeName": "CALC_EXPRESSION",
       "items": [
         { "nodeName": "VALUE_FIELD", "value": { "id": "$form.totalField" } },
-        { "nodeName": "Using", "value": null },
-        { "nodeName": "Expression", "value": null },
+        { "nodeName": "to", "value": null },
         {
           "nodeName": "EXPRESSION",
           "choice": {
@@ -129,7 +125,9 @@ Sequence: `VALUE_FIELD When CONDITIONORALWAYS`. Use `CONDITIONORALWAYS.choice: n
               { "nodeName": "COMPONENT", "value": { "id": "$form.field2" } }
             ]
           }
-        }
+        },
+        { "nodeName": "When", "value": null },
+        { "nodeName": "CONDITIONORALWAYS", "choice": null }
       ]
     }
   }],

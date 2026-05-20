@@ -1,7 +1,7 @@
 {
   "id": "find-field-not-found",
   "description": "Find field by name returns found:false and exits 1 when name does not exist",
-  "script": "skills/forms-content-author/forms-content-update/scripts/find-field.bundle.js",
+  "script": "skills/forms-content-author/references/forms-content-update/scripts/find-field.bundle.js",
   "args": {
     "--content-model": "@fixtures/content-model-contact-us.json",
     "--name": "nonexistent_field"

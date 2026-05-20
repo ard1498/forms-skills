@@ -1,10 +1,9 @@
 ---
 name: create-screen-doc
 description: >
-  Creates Screen.md documentation for a particular form screen based on
-  reference documentation and form JSON. Extracts fields, validation rules,
-  visibility logic, business rules, and API calls into a standardised
-  11-section document. Use when creating new screen documentation from scratch.
+  Use when creating new Screen.md documentation from reference docs and form JSON.
+  Extracts fields, validation rules, visibility logic, business rules, and API
+  calls into a standardized 11-section document.
   Triggers: create screen doc, document screen, new screen documentation,
   Screen.md, write screen doc.
 type: skill

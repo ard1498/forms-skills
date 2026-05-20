@@ -1,7 +1,7 @@
 {
   "id": "check-name-collision-no-collision",
   "description": "Unique name returns collision:false with list of existing names",
-  "script": "skills/forms-content-author/forms-content-generate/scripts/check-name-collision.bundle.js",
+  "script": "skills/forms-content-author/references/forms-content-generate/scripts/check-name-collision.bundle.js",
   "args": {
     "--content-model": "@fixtures/content-model-contact-us.json",
     "--name": "phone_number"

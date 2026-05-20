@@ -1,10 +1,10 @@
 ---
 name: domain-registry
 description: >
-  Domain registry and router for AEM Forms skills. Catalogs all domains and their
-  skills. Routes user intents to the correct domain based on trigger patterns.
-  Used by the orchestrator to resolve plan step targets and direct domain routing.
-  Triggers: which domain, which skill, what can you do, list skills, capabilities.
+  Use when routing a user intent to the correct AEM Forms domain and skill,
+  or when listing available skills and capabilities.
+  Triggers: which domain, which skill, what can you do, list skills,
+  capabilities.
 type: router
 license: Apache-2.0
 metadata:
@@ -26,32 +26,28 @@ Domains are skill containers. Each domain has a router SKILL.md that handles ski
 
 | Domain | Router | Description |
 |--------|--------|-------------|
-| `analysis` | [`references/analysis/SKILL.md`](references/analysis/SKILL.md) | Analysis & documentation — requirements, screen docs, migration, review |
-| `content-author` | [`references/content-author/SKILL.md`](references/content-author/SKILL.md) | Form structure & components — scaffold, create/modify JSON, custom components |
-| `rule-creator` | [`references/rule-creator/SKILL.md`](references/rule-creator/SKILL.md) | Business rules & custom functions — rules, JS functions, optimization |
-| `integration` | [`references/integration/SKILL.md`](references/integration/SKILL.md) | API & data integration — FDM sync, OpenAPI, JS API clients |
-| `infra` | [`references/infra/SKILL.md`](references/infra/SKILL.md) | Infrastructure — workspace setup, EDS code sync, git |
-| `context-management` | [`references/context-management/SKILL.md`](references/context-management/SKILL.md) | Agent memory & continuity — handover, history, session logs |
-
----
-
-## Skills & Intent Routing
-
-Full catalog of all 16 skills across 6 domains, plus intent-based routing for direct domain routing: **[`assets/skills-catalog.md`](assets/skills-catalog.md)**
+| `analysis` | `skills/forms-analysis/SKILL.md` | Analysis & documentation — requirements, screen docs, migration, review |
+| `content-author` | `skills/forms-content-author/SKILL.md` | Form structure & components — scaffold, create/modify JSON, custom components |
+| `rule-creator` | `skills/forms-rule-creator/SKILL.md` | Business rules & custom functions — rules, JS functions, optimization |
+| `integration` | `skills/forms-integration/SKILL.md` | API & data integration — FDM sync, OpenAPI, JS API clients |
+| `context-management` | `skills/forms-context-management/SKILL.md` | Agent memory & continuity — handover, history, session logs |
 
 ---
 
 ## Skill Resolution
 
-How plan steps resolve to domain skills (exact-match rules, hard-stop on missing domain/skill): **[`assets/skill-resolution.md`](assets/skill-resolution.md)**
+When a plan step declares a skill, resolve it using the Registry table above:
+1. Find which domain owns the skill
+2. Read the domain's router SKILL.md at `skills/forms-<domain>/SKILL.md`
+3. The domain router handles invocation
+
+**Hard stops:** If the declared skill's domain is not in the Registry, or the domain router does not recognize the skill — halt and report the error. Do not guess or substitute.
 
 ---
 
-## Domain Template & Contribution Guide
+## Domain Template
 
-All domain router SKILL.md files must follow the standard domain template. Template, plus instructions for adding new domains and skills: **[`assets/contribution-guide.md`](assets/contribution-guide.md)**
-
-Template file: [`assets/templates/domain-template.md`](assets/templates/domain-template.md)
+All domain router SKILL.md files must follow the standard domain template: **[`assets/TEMPLATE.md`](assets/TEMPLATE.md)**
 
 ---
 
@@ -59,8 +55,5 @@ Template file: [`assets/templates/domain-template.md`](assets/templates/domain-t
 
 | What | Where |
 |------|-------|
-| Skills catalog & intent routing | `assets/skills-catalog.md` |
-| Skill resolution algorithm | `assets/skill-resolution.md` |
-| Domain template | `assets/templates/domain-template.md` |
-| Contribution guide | `assets/contribution-guide.md` |
-| Domain routers | `references/<domain>/SKILL.md` |
+| Domain template | `assets/TEMPLATE.md` |
+| Domain routers | `skills/forms-<domain>/SKILL.md` |

@@ -1,7 +1,7 @@
 {
   "id": "validate-patch-invalid-string-for-bool",
   "description": "Replace required with string 'true' fails validation — boolean type mismatch",
-  "script": "skills/forms-content-author/forms-content-update/scripts/validate-patch.bundle.js",
+  "script": "skills/forms-content-author/references/forms-content-update/scripts/validate-patch.bundle.js",
   "args": {
     "--content-model": "@fixtures/content-model-contact-us.json",
     "--definition": "@fixtures/definition-slim.json",

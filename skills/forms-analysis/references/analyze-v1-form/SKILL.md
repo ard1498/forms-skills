@@ -1,10 +1,9 @@
 ---
 name: analyze-v1-form
 description: >
-  Analyze legacy v1 AEM Adaptive Form JSON files through direct human-like reading to
-  identify screens, extract fields and rules, and compare across journeys. Use when
-  migrating from v1 AEM forms — NOT for analyzing journey documents or requirements
-  (use analyze-requirements for that). Does NOT use code or scripts — pure reasoning only.
+  Use when migrating from v1 AEM forms — analyzes legacy form JSON to identify
+  screens, extract fields and rules. NOT for requirements docs (use
+  analyze-requirements for that). Pure reasoning, no scripts.
   Triggers: v1 form, legacy form, migrate form, v1 JSON, old form, AEM migration,
   extract screens, extract fields, compare journeys.
 type: skill

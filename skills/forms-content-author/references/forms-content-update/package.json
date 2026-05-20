@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.0",
+    "@aemforms/rule-editor-transformer": "*"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "id": "find-field-fd-rules-found",
   "description": "find-field locates fd:rules and fd:events nodes when they exist — used by apply-rule-workflow CHECK step",
-  "script": "skills/forms-content-author/forms-content-update/scripts/find-field.bundle.js",
+  "script": "skills/forms-content-author/references/forms-content-update/scripts/find-field.bundle.js",
   "args": {
     "--content-model": "@fixtures/content-model-contact-us.json",
     "--names": "fd:rules,fd:events"

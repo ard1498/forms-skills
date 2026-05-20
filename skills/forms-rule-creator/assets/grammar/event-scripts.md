@@ -183,12 +183,12 @@ FT_FORMS_12053 is ON by default (`allowBase: true`). Add an Else branch only whe
 
 ## fd:* Key Selection
 
-Use `agent-kb/05-rule-events-by-scenario.md` to confirm the correct fd:* key. Quick reference:
+Use `../agent-kb/05-rule-events-by-scenario.md` to confirm the correct fd:* key. Quick reference:
 
 | Trigger | fd:* key |
 |---------|----------|
 | Button click | `fd:click` |
-| Field value change | `fd:change` |
+| Field value change | `fd:valueCommit` |
 | Form initialize | `fd:init` |
 | Form submit success | `fd:submitSuccess` |
 | Form submit error | `fd:submitError` |

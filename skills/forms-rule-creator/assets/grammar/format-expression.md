@@ -45,7 +45,7 @@ The sequence is always: `VALUE_FIELD`, `Using`, `Expression`, `NUMBER_FORMAT_EXP
 }
 ```
 
-For available format strings and OOTB formatting functions, see `agent-kb/07-json-formula-for-rules.md`.
+For available format strings and OOTB formatting functions, see `../agent-kb/07-json-formula-for-rules.md`.
 
 ---
 

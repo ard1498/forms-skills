@@ -1,7 +1,7 @@
 {
   "id": "validate-add-valid",
   "description": "Component with all required properties passes validate-add",
-  "script": "skills/forms-content-author/forms-content-generate/scripts/validate-add.bundle.js",
+  "script": "skills/forms-content-author/references/forms-content-generate/scripts/validate-add.bundle.js",
   "args": {
     "--definition": "@fixtures/definition-slim.json",
     "--component": "{\"id\":\"phone\",\"componentType\":\"forms-components-examples/components/form/telephoneinput\",\"properties\":{\"name\":\"phone\",\"jcr:title\":\"Phone\",\"fieldType\":\"tel\",\"dorColspan\":12}}"

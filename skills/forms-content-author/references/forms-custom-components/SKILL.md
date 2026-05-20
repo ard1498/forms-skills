@@ -1,12 +1,11 @@
 ---
 name: forms-custom-components
 description: >
-  Create custom AEM Adaptive Form components for EDS-based (Edge Delivery Services) forms
-  using the fd:viewType pattern. Use when out-of-the-box fields don't satisfy requirements,
-  or when you need to extend existing field functionality with a custom widget. Handles
-  scaffolding, mapping registration, subscribe wiring, and decorate function setup.
-  Triggers: custom component, extend field, custom widget, fd:viewType, custom view type,
-  custom AEM form component, EDS form component.
+  Use when out-of-the-box AEM Adaptive Form fields do not meet requirements,
+  or when extending a field with a custom EDS widget using the fd:viewType
+  pattern.
+  Triggers: custom component, extend field, custom widget, fd:viewType,
+  custom view type, custom AEM form component, EDS form component.
 type: skill
 license: Apache-2.0
 metadata:

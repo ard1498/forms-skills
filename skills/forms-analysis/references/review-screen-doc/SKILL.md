@@ -1,11 +1,11 @@
 ---
 name: review-screen-doc
 description: >
-  Reviews and critiques Screen.md documentation by cross-referencing against
-  actual v1 form JSON. Adds missing sections, removes duplicates, resolves
-  dropdowns, and validates field properties. Use when reviewing existing screen
-  documentation. Triggers: review screen doc, check Screen.md, validate
-  documentation, critique screen doc, missing sections.
+  Use when reviewing or validating existing Screen.md documentation against
+  v1 form JSON. Adds missing sections, resolves dropdowns, validates field
+  properties.
+  Triggers: review screen doc, check Screen.md, validate documentation,
+  critique screen doc, missing sections.
 type: skill
 license: Apache-2.0
 metadata:

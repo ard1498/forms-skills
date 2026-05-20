@@ -1,7 +1,7 @@
 {
   "id": "get-component-def-textinput",
   "description": "Extracts textinput component profile with fields and requiredKeys from definition",
-  "script": "skills/forms-content-author/forms-content-generate/scripts/get-component-def.bundle.js",
+  "script": "skills/forms-content-author/references/forms-content-generate/scripts/get-component-def.bundle.js",
   "args": {
     "--definition": "@fixtures/definition-slim.json",
     "--component-type": "forms-components-examples/components/form/textinput"

@@ -1,7 +1,7 @@
 {
   "id": "rewrite-rule-refs-rewrites",
   "description": "Rewrites COMPONENT refs in fd:visible on 'state' from $form.country to $form.country_new after rename",
-  "script": "skills/forms-content-author/forms-content-update/scripts/rewrite-rule-refs.bundle.js",
+  "script": "skills/forms-content-author/references/forms-content-update/scripts/rewrite-rule-refs.bundle.js",
   "args": {
     "--content-model-file": "fixture:content-model-with-rule-refs.json",
     "--old-id": "$form.country",

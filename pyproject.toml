@@ -16,7 +16,6 @@ dependencies = [
     "Jinja2>=3.0.0",
     "apispec>=6.0.0",
     "openapi-spec-validator>=0.7.0",
-    "PyGithub>=2.1.1",
 ]
 
 [project.optional-dependencies]
@@ -26,15 +25,11 @@ dev = [
 ]
 
 [project.scripts]
-eds-code-sync = "eds_code_sync.cli:cli"
 api-manager = "api_manager.cli:cli"
 api-skill = "api_skill.cli:main"
-git-sandbox = "git_sandbox.cli:cli"
 
 [tool.setuptools.packages.find]
 where = [
-    "skills/forms-shared/scripts",
-    "skills/forms-infra/references/sync-eds-code/scripts",
-    "skills/forms-infra/references/git-sandbox/scripts",
+    "lib/scripts",
     "skills/forms-integration/references/manage-apis/scripts",
 ]

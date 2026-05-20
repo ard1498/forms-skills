@@ -1,10 +1,10 @@
 ---
 name: analyze-requirements
 description: >
-  Analyze requirements documents, screen mockups, or journey maps to produce structured
-  form specifications. Use when starting a new form project from a requirements doc, 
-  Screen.md, or journey.md. Produces field inventory, panel structure, rule requirements,
-  and API dependencies. Triggers: analyze requirements, create spec, plan form, Screen.md.
+  Use when starting a new form project from a requirements doc, Screen.md,
+  journey.md, or mockups. Produces field inventory, panel structure, rule
+  requirements, and API dependencies.
+  Triggers: analyze requirements, create spec, plan form, Screen.md.
 type: skill
 license: Apache-2.0
 metadata:

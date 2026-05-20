@@ -10,7 +10,6 @@ Skills plugin that gives AI coding agents (Claude Code, etc.) the knowledge and 
 
 - [How It Works](#how-it-works)
 - [User Guide](#user-guide) _(install, set up workspace, start building)_
-- [Tutorial](tutorial.md) _(build a complete form end-to-end)_
 - [Developer Guide](#developer-guide) _(work on the plugin itself)_
 
 ---
@@ -49,7 +48,7 @@ User Intent
        ▼                   ▼
   Plan files          Domain Routers
   plans/<journey>/    ┌──────────────┐
-  NN-<title>.md       │ type: domain │
+  NN-<title>.md       │ type: router │
                       └──────┬───────┘
                              │
                              ▼
@@ -60,11 +59,11 @@ User Intent
 
 ### 6-Step Routing Algorithm
 
-Routing follows a strict 6-step algorithm defined in `forms-orchestrator/assets/routing-table.md`:
+Routing follows a strict 6-step algorithm defined in `forms-orchestrator/assets/ROUTES.md`:
 
 | Step | Name | Condition | Action |
 |------|------|-----------|--------|
-| 1 | **Workspace gate** | No workspace detected? | → `infra` › `setup-workspace` (hard block) |
+| 1 | **Workspace gate** | No workspace detected? | → read `assets/SETUP.md` inline (hard block) |
 | 2 | **Active plan** | Active plan in `.agent/handover.md`? | → Resume it |
 | 3 | **Plans exist** | Pending plans in `plans/<journey>/`? | → Activate next → execute |
 | 4 | **Generate plans** | User has requirements but no plans? | → Planner generates them |
@@ -73,7 +72,7 @@ Routing follows a strict 6-step algorithm defined in `forms-orchestrator/assets/
 
 You don't need to memorize this — just start talking to the agent. The orchestrator handles routing.
 
-> **Full details:** See `forms-orchestrator/SKILL.md` for the complete routing table and orchestrator constraints, and `forms-orchestrator/assets/routing-table.md` for the algorithm definition.
+> **Full details:** See `forms-orchestrator/SKILL.md` for the complete routing table and orchestrator constraints, and `forms-orchestrator/assets/ROUTES.md` for the algorithm definition.
 
 ### Domains
 
@@ -83,7 +82,6 @@ You don't need to memorize this — just start talking to the agent. The orchest
 | `content-author` | Form structure & components via Sites Content MCP | `forms-custom-components` (+ `forms-content-update`, `forms-content-generate` internally) |
 | `rule-creator` | Business rules & custom functions | `forms-rule-creator` |
 | `integration` | APIs & data | `manage-apis` |
-| `infra` | Workspace setup | `setup-workspace` |
 | `context-management` | Agent memory & session continuity | `manage-context` |
 
 ### Plan Types
@@ -145,13 +143,13 @@ After installation, tell your agent:
 
 > _"Set up a new AEM Forms workspace for my project."_
 
-The `setup-workspace` skill handles everything — directory structure, `.env` credentials, system checks, and first sync. See [`skills/forms-infra/references/setup-workspace/SKILL.md`](../forms-infra/references/setup-workspace/SKILL.md) for the full workspace layout, credential reference, and configuration guide.
+The orchestrator reads `assets/SETUP.md` inline at the workspace gate — directory structure, `.env` credentials, system checks, and first-run validation. See [`assets/SETUP.md`](assets/SETUP.md) for the full workspace layout, credential reference, and configuration guide.
 
 Once your workspace is ready, just start talking:
 
 > _"Here's the requirements doc for a personal loan application. Build the form."_
 
-The **forms-orchestrator** (`forms-orchestrator/SKILL.md`) receives your intent and runs through the 6-step routing algorithm. For complex requirements it invokes the **Planner** to generate a sequence of plans, then executes each plan by routing to the appropriate domain and skill. For simple single-task requests it routes directly to the matching domain. See the orchestrator for the complete routing table and available skills across all six domains: `analysis`, `content-author`, `rule-creator`, `integration`, `infra`, and `context-management`.
+The **forms-orchestrator** (`forms-orchestrator/SKILL.md`) receives your intent and runs through the 6-step routing algorithm. For complex requirements it invokes the **Planner** to generate a sequence of plans, then executes each plan by routing to the appropriate domain and skill. For simple single-task requests it routes directly to the matching domain. See the orchestrator for the complete routing table and available skills across all five domains: `analysis`, `content-author`, `rule-creator`, `integration`, and `context-management`.
 
 ---
 
@@ -173,13 +171,13 @@ git clone <repo-url>
 cd forms-skills
 
 # Run the setup script — creates .venv at project root, installs everything
-./skills/aem/forms/forms-shared/scripts/setup.sh
+./lib/scripts/setup.sh
 ```
 
 The script will:
 1. Create a `.venv` virtual environment at the project root (uses `uv` if available, falls back to `python3 -m venv`).
 2. Install the project in editable mode (`pip install -e ".[dev]"`).
-3. Install the Node.js bridge dependencies (`npm install` in `forms-rule-creator/`).
+3. Install the Node.js build dependencies (`npm install` in `forms-content-author/references/forms-content-update/`).
 
 After setup, activate the venv in any new shell:
 
@@ -200,8 +198,6 @@ npx check-plugin .
 ```
 
 This checks that every skill path registered in `plugin.json` has a valid `SKILL.md` with `name` and `description` frontmatter. The `check-plugin` command ships with `@aemforms/crispy-garbanzo` — run `npm install` once to make it available.
-
-See `forms-orchestrator/assets/error-handling.md` for CLI tool error patterns and recovery.
 
 ## 3. Run Evals
 
@@ -237,73 +233,76 @@ forms-skills/                            # repo root — aem-forms plugin
 │   │   ├── run-evals.js
 │   │   └── run-llm-evals.js
 │   ├── scenarios/
-│   └── fixtures/
+│   ├── fixtures/
+│   └── .envrc.example                   # LLM eval credentials (Bedrock / Anthropic)
+├── lib/                                 # Shared scripts and Python runtime (type: lib)
+│   └── scripts/
+│       ├── setup.sh                     # Bootstrap script
+│       ├── api-manager
+│       └── api_manager/
 └── skills/
     ├── forms-orchestrator/              # Entry point router (type: router)
     │   ├── SKILL.md
     │   ├── assets/
-    │   │   ├── guidelines.md
-    │   │   ├── routing-table.md
-    │   │   └── error-handling.md
+    │   │   ├── GUARDRAILS.md
+    │   │   ├── ROUTES.md
+    │   │   └── SETUP.md          # Workspace setup (read inline at gate)
     │   ├── references/
     │   │   ├── planner/                 # Plan generator (type: skill)
     │   │   └── domain-registry/         # Domain & skill catalog (type: router)
-    │   └── tutorial.md
     ├── forms-analysis/                  # Analysis domain
     │   └── references/
     │       ├── analyze-requirements/
     │       ├── analyze-v1-form/
     │       ├── create-screen-doc/
     │       └── jud-to-screen/
-    ├── forms-content-author/            # Content authoring domain
+    ├── forms-content-author/            # Content authoring domain (type: router)
     │   ├── SKILL.md
-    │   ├── forms-content-update/        # MCP-based form authoring (internal sub-skill)
-    │   ├── forms-content-generate/      # Component payload builder (internal sub-skill)
     │   └── references/
+    │       ├── forms-content-update/    # MCP-based form authoring (type: skill)
+    │       ├── forms-content-generate/  # Component payload builder (type: skill)
     │       └── forms-custom-components/
-    ├── forms-rule-creator/              # Rule & custom function authoring
+    ├── forms-rule-creator/              # Rule & custom function authoring (type: skill)
     │   ├── SKILL.md
-    │   ├── scripts/                     # Pre-built bundles (no npm install at runtime)
+    │   ├── scripts/                     # Pre-built .jsh bundles (no npm install at runtime)
     │   ├── assets/
     │   │   ├── agent-kb/                # Rule authoring reference docs
     │   │   └── grammar/                 # Grammar reference docs
     │   └── references/
-    ├── forms-infra/                     # Infra domain
-    │   └── references/
-    │       └── setup-workspace/
     ├── forms-integration/               # Integration domain
     │   └── references/
     │       └── manage-apis/
-    ├── forms-context-management/        # Context & session domain
-    │   └── references/
-    │       └── manage-context/
-    └── forms-shared/                    # Shared scripts
-        └── scripts/
-            ├── api-manager
-            └── api_manager/
+    └── forms-context-management/        # Context & session domain
+        └── references/
+            └── manage-context/
 ```
 
 Every level follows the [agentskills.io specification](https://agentskills.io/specification): `SKILL.md` (required) + `scripts/` + `references/` + `assets/` (optional).
 
-## Shared CLI Tools (`forms-shared/scripts/`)
+## Shared CLI Tools (`lib/scripts/`)
 
 | Tool | Backend | Description |
 |------|---------|-------------|
-| `api-manager` | `forms-shared/scripts/api_manager/cli.py` | Manage OpenAPI specs and JS clients |
+| `api-manager` | `lib/scripts/api_manager/cli.py` | Manage OpenAPI specs and JS clients |
 
-## Rule Creator Bundles (`forms-rule-creator/scripts/`)
+## Rule Creator Scripts (`forms-rule-creator/scripts/`)
 
-Pre-built Node.js bundles — no `npm install` at runtime.
+Pre-built Node.js bundles (`.jsh`) — no `npm install` at runtime. Run with `node $SKILL_DIR/scripts/<name>.jsh`.
 
-| Bundle | Description |
+| Script | Description |
 |--------|-------------|
-| `content-model-to-tree.bundle.js` | Content model → treeJson |
-| `validate-rule.bundle.js` | Validate rule AST |
-| `generate-formula.bundle.js` | Compile rule AST → JSON Formula |
-| `parse-functions.bundle.js` | Parse custom function JSDoc annotations |
-| `validate-merge.bundle.js` | Validate merged rule patch |
+| `transform-jcr.jsh` | Transform JCR form JSON → treeJson for rule editing |
+| `transform-content-model.jsh` | Transform content model JSON → treeJson for rule editing |
+| `find-field.jsh` | Find field by name → qualifiedId + type |
+| `validate-rule.jsh` | Validate rule AST against grammar |
+| `generate-formula.jsh` | Compile rule AST → JSON Formula |
+| `merge-formula.jsh` | Merge compiled formula back into form |
+| `parse-functions.jsh` | Parse custom function JSDoc annotations |
+| `validate-custom-function.bundle.js` | Validate custom function signature |
 
-## Content Update Bundles (`forms-content-author/forms-content-update/scripts/`)
+## Content Update Bundles (`forms-content-author/references/forms-content-update/scripts/`)
+
+Pre-built via `build.mjs` (devDependency: esbuild). Run with `node $SKILL_DIR/scripts/<name>.bundle.js`.
 
 | Bundle | Description |
 |--------|-------------|
@@ -311,6 +310,9 @@ Pre-built Node.js bundles — no `npm install` at runtime.
 | `resolve-insert-position.bundle.js` | Resolve insert index in panel |
 | `validate-patch.bundle.js` | Type-check replace ops against Content API definition |
 | `list-form-fields.bundle.js` | Flat list of all fields in content model |
+| `apply-rule-patch.bundle.js` | Apply fd:rules / fd:events patch onto a content model node |
+| `find-rule-refs.bundle.js` | Scan fd:rules ASTs for COMPONENT refs to a qualifiedId |
+| `rewrite-rule-refs.bundle.js` | Rewrite COMPONENT refs old→new in fd:rules ASTs |
 
 ## Skill-Embedded CLI Tools
 
@@ -320,11 +322,11 @@ Pre-built Node.js bundles — no `npm install` at runtime.
 
 ## Adding a New Skill
 
-1. Decide which domain it belongs to (`analysis`, `content-author`, `rule-creator`, `integration`, `infra`, or `context-management`).
+1. Decide which domain it belongs to (`analysis`, `content-author`, `rule-creator`, `integration`, or `context-management`).
 2. Create a directory under `skills/forms-<domain>/references/<skill-name>/`.
 3. Add a `SKILL.md` file with frontmatter (`name`, `description`, `type`) and instructions.
 4. If the skill needs a CLI tool, add a `scripts/` directory inside the skill.
-5. Register it in `skills/forms-orchestrator/references/domain-registry/assets/skills-catalog.md`.
+5. Register it in `skills/forms-orchestrator/references/domain-registry/SKILL.md` (Registry table).
 6. Register it in `.claude-plugin/plugin.json` (repo root) under the `skills` array.
 7. Run `npx check-plugin .` from the repo root to verify.
 

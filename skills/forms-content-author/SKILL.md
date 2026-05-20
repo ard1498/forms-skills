@@ -1,6 +1,28 @@
 ---
 name: forms-content-author
-description: "Domain skill for AEM Adaptive Forms content authoring via the Sites Content MCP API. Use when the user wants to create, add, modify, delete, move, or read AEM Adaptive Form fields, panels, fragments, or form-level settings. Routes to forms-content-generate, forms-content-update, or forms-rule-creator based on intent. Triggers: create form, add field, add panel, add fragment, change property, delete field, move field, show fields, set required, rename, add options, show/hide rules."
+description: >
+  Use when user wants to create, add, modify, delete, move, or read AEM
+  Adaptive Form fields, panels, fragments, or form-level settings via the
+  Sites Content MCP API.
+  Triggers: create form, add field, add panel, add fragment, change property,
+  delete field, move field, show fields, set required, rename, add options.
+type: router
+triggers:
+  - create form
+  - add field
+  - add panel
+  - add fragment
+  - change property
+  - delete field
+  - move field
+  - show fields
+  - set required
+  - rename
+  - add options
+license: Apache-2.0
+metadata:
+  author: Adobe
+  version: "0.1"
 ---
 
 # Forms Content Author
@@ -19,8 +41,8 @@ Routes form authoring requests to the appropriate sub-skill based on intent.
 
 If an internal sub-skill's content is not in context, load it with the `Read` tool:
 ```
-Read $SKILL_DIR/skills/forms-content-author/forms-content-update/SKILL.md
-Read $SKILL_DIR/skills/forms-content-author/forms-content-generate/SKILL.md
+Read $SKILL_DIR/references/forms-content-update/SKILL.md
+Read $SKILL_DIR/references/forms-content-generate/SKILL.md
 ```
 
 ---
@@ -69,7 +91,7 @@ Before routing to any sub-skill, resolve the user's page reference to a `pageId`
 
 Store `PAGE_ID` and pass it to all sub-skill calls in place of any `pageId` argument. Never pass a raw path as `pageId` to `get-aem-page-content` or any other MCP tool.
 
-> Exception: `create-form` — the user provides a template source path/pageId, not a target. Resolution for `sourcePageId` is handled inside `forms-content-update` §3.
+Exception: `create-form` — the user provides a template source path/pageId, not a target. Resolution for `sourcePageId` is handled inside `forms-content-update` §3.
 
 ---
 
@@ -91,7 +113,7 @@ Classify the request, then invoke the appropriate sub-skill:
 | `set-metadata` | "set title", "set submit action", "prefill", "schema" | `forms-content-update` |
 | `add-rule` | "when", "if", "show/hide", "validate", "calculate", "required when", "make X required when" | `forms-rule-creator` |
 
-> `forms-content-generate` is not routed to directly — it is used internally by `forms-content-update` to construct and validate component payloads before AEM calls.
+`forms-content-generate` is not routed to directly — it is used internally by `forms-content-update` to construct and validate component payloads before AEM calls.
 
 **Intent disambiguation — "make X required when Y":**
 - `modify-property` (no condition) — "make address required" (always required, no condition) → set `required: true` via patch
@@ -127,11 +149,11 @@ Rule intent patterns: `when`, `if...then`, `show when`, `hide when`, `required w
 
 ### Rule Authoring Flow
 
-0. **Write content model to file first** — use the `Write` tool to save `response.data` from `get-aem-page-content` to `/tmp/content-model.json`. The value must be the object starting with `{"id":"jcr:content",...}` — NOT wrapped in `{"data":...}`. All find-field and content-model-to-tree calls in this workflow use `--content-model-file /tmp/content-model.json`.
+0. **Write content model to file first** — use the `Write` tool to save `response.data` from `get-aem-page-content` to `/tmp/content-model.json`. The value must be the object starting with `{"id":"jcr:content",...}` — NOT wrapped in `{"data":...}`. All find-field and transform-content-model calls in this workflow use `--content-model-file /tmp/content-model.json`.
 
 1. Resolve ALL fields mentioned in the rule intent (target field + every referenced field) in one call (use `--content-model-file` — never pass large JSON inline):
    ```bash
-   node $SKILL_DIR/skills/forms-content-author/forms-content-update/scripts/find-field.bundle.js \
+   node $SKILL_DIR/references/forms-content-update/scripts/find-field.bundle.js \
      --content-model-file /tmp/content-model.json \
      --names "<targetField>,<refField1>,<refField2>,..."
    # → [{ name, qualifiedId, pointer, capiKey, ... }]
@@ -158,14 +180,14 @@ Rule intent patterns: `when`, `if...then`, `show when`, `hide when`, `required w
 
 Always batch all ops for a single user request into **one** `patch-aem-page-content` call.
 
-> **MUST NOT** make separate patch calls per field. Build a single `ops` array containing all add/replace/remove operations, then call `patch-aem-page-content` once:
-> ```json
-> [
->   { "op": "add", "path": "/items/0/items/3", "value": { /* field 1 */ } },
->   { "op": "add", "path": "/items/0/items/4", "value": { /* field 2 */ } }
-> ]
-> ```
-> Calling patch twice for two fields is always wrong — it wastes an eTag round-trip and risks a conflict on the second call.
+**MUST NOT** make separate patch calls per field. Build a single `ops` array containing all add/replace/remove operations, then call `patch-aem-page-content` once:
+```json
+[
+  { "op": "add", "path": "/items/0/items/3", "value": { /* field 1 */ } },
+  { "op": "add", "path": "/items/0/items/4", "value": { /* field 2 */ } }
+]
+```
+Calling patch twice for two fields is always wrong — it wastes an eTag round-trip and risks a conflict on the second call.
 
 Exceptions (the only cases requiring multiple patch calls):
 - Move/reorder (remove + add require an eTag refresh between them — two round-trips are mandatory)

@@ -34,13 +34,13 @@ Each action in a rule is a `BLOCK_STATEMENT`. Multiple actions are multiple item
 
 ## SET_VALUE_STATEMENT
 
-Set the value of a field. Target is `COMPONENT`; value is `EXPRESSION`.
+Set the value of a field. Target is `VALUE_FIELD`; value is `EXPRESSION`.
 
 ```json
 {
   "nodeName": "SET_VALUE_STATEMENT",
   "items": [
-    { "nodeName": "COMPONENT", "value": { "id": "$form.field1" } },
+    { "nodeName": "VALUE_FIELD", "value": { "id": "$form.field1" } },
     { "nodeName": "to", "value": null },
     {
       "nodeName": "EXPRESSION",
@@ -164,7 +164,7 @@ Navigate to a URL, component, or function result in a specified window/tab mode.
 ```
 
 `NAVIGATE_TO_EXPRESSION` choices: `URL_LITERAL`, `COMPONENT`, `FUNCTION_CALL`.  
-`NAVIGATE_METHOD_OPTIONS` choices: `NEW_WINDOW`, `NEW_TAB`, `SAME_PAGE`.
+`NAVIGATE_METHOD_OPTIONS` choices: `NEW_WINDOW`, `NEW_TAB`, `SAME_TAB`.
 
 ---
 
@@ -194,3 +194,105 @@ Invoking a function for its side-effects uses `FUNCTION_CALL` directly as a BLOC
 ```
 
 The `impl` value uses `$0()` for zero-arg, `$0($1)` for one arg, `$0($1, $2)` for two args, etc. — see agent-kb `08` for OOTB function impl strings and `12` for custom function authoring.
+
+
+---
+
+## SAVE_FORM *(requires FT_FORMS_11581)*
+
+Save the current form state. No items.
+
+```json
+{ "nodeName": "SAVE_FORM", "items": [] }
+```
+
+---
+
+## NAVIGATE_IN_PANEL *(requires FT_FORMS_10781)*
+
+Move focus to the next or previous item within a panel.
+
+```json
+{
+  "nodeName": "NAVIGATE_IN_PANEL",
+  "items": [
+    { "nodeName": "PANEL_FOCUS_OPTION", "choice": { "nodeName": "NEXT_ITEM" } },
+    { "nodeName": "of", "value": null },
+    { "nodeName": "PANEL", "value": { "id": "$form.panel1" } }
+  ]
+}
+```
+
+`PANEL_FOCUS_OPTION` choices: `NEXT_ITEM`, `PREVIOUS_ITEM`.
+
+---
+
+## WRITE_JSON_FORMULA *(requires FT_FORMS_20655)*
+
+Emit a raw JSON Formula string directly. The `STRING_LITERAL` value is stripped of surrounding quotes and emitted verbatim.
+
+```json
+{
+  "nodeName": "WRITE_JSON_FORMULA",
+  "items": [
+    { "nodeName": "STRING_LITERAL", "value": "someFormula()" }
+  ]
+}
+```
+
+---
+
+## SET_VARIABLE *(requires FT_FORMS_19884)*
+
+Store a value in a named variable on a component.
+
+```json
+{
+  "nodeName": "SET_VARIABLE",
+  "items": [
+    { "nodeName": "key", "value": null },
+    { "nodeName": "VARIABLE_NAME", "choice": { "nodeName": "STRING_LITERAL", "value": "myVar" } },
+    { "nodeName": "value", "value": null },
+    { "nodeName": "VARIABLE_VALUE", "choice": { "nodeName": "STRING_LITERAL", "value": "hello" } },
+    { "nodeName": "on", "value": null },
+    { "nodeName": "AFCOMPONENT", "value": { "id": "$form.field1" } }
+  ]
+}
+```
+
+`VARIABLE_NAME` choices: `AFCOMPONENT`, `STRING_LITERAL`, `FUNCTION_CALL`, `GET_VARIABLE`, `BINARY_EXPRESSION`.  
+`VARIABLE_VALUE` choices: `STRING_LITERAL`, `NUMERIC_LITERAL`, `BOOLEAN_LITERAL`, `AFCOMPONENT`, `FUNCTION_CALL`, `GET_VARIABLE`, `BINARY_EXPRESSION`.
+
+---
+
+## GET_VARIABLE *(requires FT_FORMS_19884)*
+
+Retrieve a named variable from a component (used as an expression, not a statement).
+
+```json
+{
+  "nodeName": "GET_VARIABLE",
+  "items": [
+    { "nodeName": "key", "value": null },
+    { "nodeName": "VARIABLE_NAME", "choice": { "nodeName": "STRING_LITERAL", "value": "myVar" } },
+    { "nodeName": "from", "value": null },
+    { "nodeName": "AFCOMPONENT", "value": { "id": "$form.field1" } }
+  ]
+}
+```
+
+---
+
+## ASYNC_FUNCTION_CALL *(requires FT_FORMS_13519)*
+
+Invoke an async/callback function for its side-effects as a BLOCK_STATEMENT.
+
+```json
+{
+  "nodeName": "ASYNC_FUNCTION_CALL",
+  "functionName": { "id": "fetchData", "impl": "$0($1)", "args": [] },
+  "params": [
+    { "nodeName": "COMPONENT", "value": { "id": "$form.field1", "type": "TEXT FIELD|STRING" } }
+  ]
+}
+```

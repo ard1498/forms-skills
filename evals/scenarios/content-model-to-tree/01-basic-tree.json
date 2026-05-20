@@ -1,7 +1,7 @@
 {
   "id": "content-model-to-tree-basic",
   "description": "Converts content model to treeJson with correct qualifiedIds, fieldTypes, and nesting",
-  "script": "skills/forms-rule-creator/scripts/content-model-to-tree.bundle.js",
+  "script": "skills/forms-rule-creator/scripts/transform-content-model.jsh",
   "args": {
     "--content-model-file": "fixture:content-model-contact-us.json"
   },

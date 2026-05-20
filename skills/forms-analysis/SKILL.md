@@ -1,9 +1,10 @@
 ---
 name: forms-analysis
 description: >
-  Domain router for analysis & documentation skills. Routes user intents
-  to the correct analysis skill based on input source.
-type: domain
+  Use when user intent involves analyzing requirements, creating screen
+  documentation, reviewing existing docs, or migrating from v1 AEM forms.
+  Triggers: analyze, screen doc, v1 form, requirements, documentation.
+type: router
 triggers:
   - analyze
   - requirements
@@ -27,9 +28,7 @@ metadata:
 
 # Analysis — Domain Router
 
-- **ID:** `analysis`
-- **Version:** 0.1
-- **Description:** Routes analysis and documentation intents to the correct skill based on input source. This router does not implement — it delegates.
+Routes analysis and documentation intents to the correct skill based on input source. This router does not implement — it delegates.
 
 ---
 
@@ -60,39 +59,23 @@ First match wins.
 
 ## Skills
 
-| # | Skill | Purpose | Triggers |
-|---|-------|---------|----------|
-| 1 | `analyze-requirements` | Parse requirements docs / mockups into structured form specification | analyze, requirements, create spec, plan form, journey |
-| 2 | `analyze-v1-form` | Read legacy v1 AEM form JSON and produce Screen.md docs for migration | v1 form, legacy form, migrate, adaptive form |
-| 3 | `create-screen-doc` | Create standardized Screen.md per form screen (11-section format) | screen doc, create screen, screenshots, figma, mockup |
-| 4 | `jud-to-screen` | Create Screen.md from JUD (.docx) and design screenshots with global variable tracking | jud, docx screen, jud to screen, document screen from jud |
-| 5 | `review-screen-doc` | Validate Screen.md against actual form JSON — quality gate | review screen, validate screen, quality gate |
-
-### Skill Locations
-
-| Skill | Path |
-|-------|------|
-| `analyze-requirements` | `references/analyze-requirements/SKILL.md` |
-| `analyze-v1-form` | `references/analyze-v1-form/SKILL.md` |
-| `create-screen-doc` | `references/create-screen-doc/SKILL.md` |
-| `jud-to-screen` | `references/jud-to-screen/SKILL.md` |
-| `review-screen-doc` | `references/review-screen-doc/SKILL.md` |
-
----
+| # | Skill | Path | Purpose | Triggers |
+|---|-------|------|---------|----------|
+| 1 | `analyze-requirements` | `references/analyze-requirements/SKILL.md` | Parse requirements docs / mockups into structured form specification | analyze, requirements, create spec, plan form, journey |
+| 2 | `analyze-v1-form` | `references/analyze-v1-form/SKILL.md` | Read legacy v1 AEM form JSON and produce Screen.md docs for migration | v1 form, legacy form, migrate, adaptive form |
+| 3 | `create-screen-doc` | `references/create-screen-doc/SKILL.md` | Create standardized Screen.md per form screen (11-section format) | screen doc, create screen, screenshots, figma, mockup |
+| 4 | `jud-to-screen` | `references/jud-to-screen/SKILL.md` | Create Screen.md from JUD (.docx) and design screenshots with global variable tracking | jud, docx screen, jud to screen, document screen from jud |
+| 5 | `review-screen-doc` | `references/review-screen-doc/SKILL.md` | Validate Screen.md against actual form JSON — quality gate | review screen, validate screen, quality gate |
 
 ## Guard Policies
 
-> **screen-md-convergence:** All paths in this domain converge to produce Screen.md files. Every skill's output is either a Screen.md or feeds into one.
-
-> **quality-gate:** All Screen.md files MUST pass through `review-screen-doc` as a quality gate before leaving this domain. No Screen.md is considered complete until reviewed.
-
-> **no-guessing-endpoints:** Never guess API endpoints or service URLs. Mark any unknowns as `TBD` and flag them for the user.
-
-> **no-currentFormContext:** Never emit `PL.currentFormContext` references in any generated output. Use the documented data-binding patterns instead.
-
-> **intake-gate:** Before routing, confirm that input files (requirements, screenshots, v1 JSON, etc.) are present on disk. Do NOT proceed until files are confirmed.
-
----
+| Policy | Rule |
+|--------|------|
+| `screen-md-convergence` | All paths in this domain converge to produce Screen.md files. Every skill's output is either a Screen.md or feeds into one. |
+| `quality-gate` | All Screen.md files MUST pass through `review-screen-doc` as a quality gate before leaving this domain. No Screen.md is considered complete until reviewed. |
+| `no-guessing-endpoints` | Never guess API endpoints or service URLs. Mark any unknowns as `TBD` and flag them for the user. |
+| `no-currentFormContext` | Never emit `PL.currentFormContext` references in any generated output. Use the documented data-binding patterns instead. |
+| `intake-gate` | Before routing, confirm that input files (requirements, screenshots, v1 JSON, etc.) are present on disk. Do NOT proceed until files are confirmed. |
 
 ## File Locations
 
@@ -113,15 +96,11 @@ First match wins.
 | Screenshots | `journeys/<journey>/screens/<screen>/` | `*.png`, `*.jpg`, `*.pdf` |
 | V1 Form JSON | `refs/` | `<form-name>.v1.json` |
 
----
-
 ## Dependencies
 
 | Dependency | Domain | Purpose |
 |------------|--------|---------|
 | `review-screen-doc` → form JSON | `content-author` | Review skill needs the form JSON (fetched via MCP) to validate Screen.md against |
-
----
 
 ## Plan Integration
 
@@ -132,13 +111,9 @@ How this domain participates in plan-driven execution.
 | Plan generation — understanding requirements and producing specs | `analyze-requirements` | Parses requirements and produces initial Screen.md drafts |
 | Plan execution — screen doc creation and review | `create-screen-doc`, `review-screen-doc` | Creates Screen.md files and validates them against form JSON before build proceeds |
 
----
-
 ## Extending This Domain
 
-1. Create a new skill directory under `references/<skill-name>/`.
-2. Add a `SKILL.md` inside that directory following the skill template.
-3. Update the **Routing Table** above with the new intent → skill mapping.
-4. Add the skill to the **Skills** table and **Skill Locations** sub-table.
-5. Ensure the new skill's output either produces a Screen.md or feeds into one (per the **screen-md-convergence** policy).
-6. If the skill is a quality gate, document it in **Guard Policies**.
+- Create `references/<skill-name>/SKILL.md` following the skill template; add the intent → skill mapping to the **Routing Table** above.
+- Add the skill to the **Skills** table (path and triggers included).
+- Ensure output either produces a Screen.md or feeds into one (per the `screen-md-convergence` policy).
+- If the skill is a quality gate, add it to **Guard Policies**.

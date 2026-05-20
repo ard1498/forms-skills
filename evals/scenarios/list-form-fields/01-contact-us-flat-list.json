@@ -1,7 +1,7 @@
 {
   "id": "list-form-fields-contact-us",
   "description": "Lists all fields with name, capiKey, pointer, depth — includes fd:rules/fd:events children",
-  "script": "skills/forms-content-author/forms-content-update/scripts/list-form-fields.bundle.js",
+  "script": "skills/forms-content-author/references/forms-content-update/scripts/list-form-fields.bundle.js",
   "args": {
     "--content-model": "@fixtures/content-model-contact-us.json"
   },

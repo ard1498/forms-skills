@@ -1,6 +1,6 @@
 {
   "name": "aem-forms",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Skills for building AEM Adaptive Forms through AI conversation — create, validate, and deploy forms via natural language",
   "author": {
     "name": "Adobe"
@@ -13,9 +13,9 @@
     "./skills/forms-analysis/references/analyze-v1-form",
     "./skills/forms-analysis/references/create-screen-doc",
     "./skills/forms-analysis/references/jud-to-screen",
+    "./skills/forms-analysis/references/review-screen-doc",
     "./skills/forms-content-author/references/forms-custom-components",
     "./skills/forms-rule-creator",
-    "./skills/forms-infra/references/setup-workspace",
     "./skills/forms-integration/references/manage-apis",
     "./skills/forms-context-management/references/manage-context"
   ],

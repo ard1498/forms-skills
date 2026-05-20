@@ -1,7 +1,7 @@
 {
   "id": "filter-definition-slim",
   "description": "Slims full definition to only requested component types — output is smaller and contains only those types",
-  "script": "skills/forms-content-author/forms-content-generate/scripts/filter-definition.bundle.js",
+  "script": "skills/forms-content-author/references/forms-content-generate/scripts/filter-definition.bundle.js",
   "args": {
     "--definition-file": "fixture:definition-slim.json",
     "--component-types": "forms-components-examples/components/form/textinput"

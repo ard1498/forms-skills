@@ -1,7 +1,7 @@
 {
   "id": "resolve-insert-position-append",
   "description": "Appends to end of panel when no submit button exists",
-  "script": "skills/forms-content-author/forms-content-update/scripts/resolve-insert-position.bundle.js",
+  "script": "skills/forms-content-author/references/forms-content-update/scripts/resolve-insert-position.bundle.js",
   "args": {
     "--content-model": "@fixtures/content-model-contact-us.json",
     "--panel-capi-key": "0"
